@@ -40,12 +40,20 @@ const TITLES        = ["Mr","Ms","Mrs","Miss","Master","Dr","Dato","Datin"];
 const ROOM_TYPES    = ["Twin","Double","Single","Triple"];
 const MEAL_OPTS     = ["None","Vegetarian","Halal","Vegan","Kosher","No Pork","Other"];
 const NATIONALITIES = ["Malaysian","Singaporean","Indonesian","Filipino","Thai","Other"];
-const TOUR_STATUSES = ["Draft","Confirmed","Departed","Completed","Cancelled"];
+// CHANGE: Draft → Pending, auto-confirm at 18+
+const TOUR_STATUSES = ["Pending","Confirmed","Departed","Completed","Cancelled"];
 const VISA_STATUSES = ["Not Required","Pending Application","Applied","Approved","Rejected"];
 const BOOKING_SRC   = ["Walk-in","Referral","Website","Agent","Phone","Repeat"];
 
+// CHANGE: Added full flight detail columns to tour
 const TOUR_COLS = ["id","tourCode","tourName","airline","tourManager","departureDate","arrivalDate",
-  "status","normalPrice","singleSupplement","mealIncluded","mealExcluded","specialDiscount","isSpecialDiscount"];
+  "status","normalPrice","singleSupplement","mealIncluded","mealExcluded","specialDiscount","isSpecialDiscount",
+  "flightPNR","groupSeats",
+  "depFlight1Code","depFlight1Date","depFlight1From","depFlight1To","depFlight1Depart","depFlight1Arrive",
+  "depFlight2Code","depFlight2Date","depFlight2From","depFlight2To","depFlight2Depart","depFlight2Arrive",
+  "arrFlight1Code","arrFlight1Date","arrFlight1From","arrFlight1To","arrFlight1Depart","arrFlight1Arrive",
+  "arrFlight2Code","arrFlight2Date","arrFlight2From","arrFlight2To","arrFlight2Depart","arrFlight2Arrive"];
+
 const CUST_COLS = ["id","tourCode","title","surname","name","contact","email","address",
   "roomType","roomPartner","mealRestriction","flightExtension","hotelExtension","otherExtension",
   "upgradeAmount","groundTourOnly","payment1","payment2","payment3",
@@ -58,11 +66,34 @@ const CUST_COLS = ["id","tourCode","title","surname","name","contact","email","a
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const getDiscount = pax => { const t=DISCOUNT_TIERS.find(t=>pax>=t.min&&pax<=t.max); return t?t.discount:0; };
-const calcDN = (dep,arr) => { if(!dep||!arr) return {days:0,nights:0}; const d=Math.round((new Date(arr)-new Date(dep))/86400000); return {days:d+1,nights:d}; };
+
+// CHANGE: Days = dep fly date → arr fly date (inclusive). Nights = arrival dest → day before fly out
+function calcDN(depDate, arrDate) {
+  if(!depDate||!arrDate) return {days:0,nights:0};
+  const dep=new Date(depDate), arr=new Date(arrDate);
+  const totalDays = Math.round((arr-dep)/86400000)+1; // inclusive both ends
+  const nights = totalDays - 2; // exclude first fly day and last fly home day
+  return {days: totalDays, nights: Math.max(0, nights)};
+}
+
 const fmt = n => (n==null||n==="")?"—":"RM "+Number(n).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});
 const fmtDate = d => d?new Date(d).toLocaleDateString("en-MY",{day:"2-digit",month:"short",year:"numeric"}):"—";
 const ageYrs = dob => dob?Math.floor((Date.now()-new Date(dob))/31557600000):null;
 const boolify = v => v===true||v==="TRUE"||v==="true";
+
+// CHANGE: auto-status: if pax >= 18 and not special case → Confirmed
+function autoStatus(currentStatus, pax) {
+  if(currentStatus==="Cancelled"||currentStatus==="Departed"||currentStatus==="Completed") return currentStatus;
+  if(pax>=18) return "Confirmed";
+  return currentStatus==="Confirmed" ? "Confirmed" : "Pending"; // keep manual Confirmed
+}
+
+// CHANGE: pax colour coding
+function paxColor(pax) {
+  if(pax<=10) return {bg:"#fee2e2",col:"#dc2626"}; // red
+  if(pax<=20) return {bg:"#ffedd5",col:"#ea580c"}; // orange
+  return {bg:"#dcfce7",col:"#16a34a"};              // green
+}
 
 function calcFare(cust,tour,activePax){
   const disc   = boolify(tour?.isSpecialDiscount) ? Number(tour.specialDiscount||0) : getDiscount(activePax);
@@ -79,7 +110,6 @@ const objToRow=(headers,obj)=>headers.map(h=>{const v=obj[h];if(v===true)return"
 
 // ── GOOGLE API ────────────────────────────────────────────────────────────────
 let _token=null;
-
 async function sheetsReq(path,method="GET",body=null){
   if(!_token)throw new Error("NOT_SIGNED_IN");
   const opts={method,headers:{Authorization:`Bearer ${_token}`,"Content-Type":"application/json"}};
@@ -162,6 +192,23 @@ function printManifest(tour,customers){
   const disc=boolify(tour.isSpecialDiscount)?Number(tour.specialDiscount||0):getDiscount(ap);
   const priceToday=Number(tour.normalPrice||0)-disc;
   const dn=calcDN(tour.departureDate,tour.arrivalDate);
+
+  // Flight summary for manifest
+  const flightBlock = (tour.flightPNR||tour.depFlight1Code) ? `
+    <div style="margin:12px 0;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:12px">
+      <div style="font-weight:700;font-size:10px;color:#0369a1;text-transform:uppercase;margin-bottom:8px">✈️ Flight Details &nbsp;|&nbsp; PNR: ${tour.flightPNR||"—"} &nbsp;|&nbsp; Group Seats: ${tour.groupSeats||"—"}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:11px">
+        <div><div style="font-weight:700;color:#1e293b;margin-bottom:4px">DEPARTURE (Outbound)</div>
+          ${tour.depFlight1Code?`<div>${tour.depFlight1Code} ${tour.depFlight1Date} ${tour.depFlight1From}→${tour.depFlight1To} ${tour.depFlight1Depart}–${tour.depFlight1Arrive}</div>`:""}
+          ${tour.depFlight2Code?`<div>${tour.depFlight2Code} ${tour.depFlight2Date} ${tour.depFlight2From}→${tour.depFlight2To} ${tour.depFlight2Depart}–${tour.depFlight2Arrive}</div>`:""}
+        </div>
+        <div><div style="font-weight:700;color:#1e293b;margin-bottom:4px">ARRIVAL (Return)</div>
+          ${tour.arrFlight1Code?`<div>${tour.arrFlight1Code} ${tour.arrFlight1Date} ${tour.arrFlight1From}→${tour.arrFlight1To} ${tour.arrFlight1Depart}–${tour.arrFlight1Arrive}</div>`:""}
+          ${tour.arrFlight2Code?`<div>${tour.arrFlight2Code} ${tour.arrFlight2Date} ${tour.arrFlight2From}→${tour.arrFlight2To} ${tour.arrFlight2Depart}–${tour.arrFlight2Arrive}</div>`:""}
+        </div>
+      </div>
+    </div>` : "";
+
   const rows=customers.map((c,i)=>{
     const {fare,paid,balance}=calcFare(c,tour,ap);
     const warn=c.passportExpiry&&tour.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6;
@@ -169,7 +216,7 @@ function printManifest(tour,customers){
       <td style="${warn?"color:#dc2626;font-weight:700":""}">${fmtDate(c.passportExpiry)}${warn?" ⚠️":""}</td>
       <td>${c.roomType}${c.roomPartner?" / "+c.roomPartner:""}</td>
       <td>${c.mealRestriction!=="None"?c.mealRestriction:"—"}</td>
-      <td>${c.flightRefCode||"—"}</td>
+      <td>${c.flightRefCode||"—"} ${c.flightSeat||""}</td>
       <td style="${c.visaStatus==="Approved"?"color:#16a34a":c.visaStatus==="Rejected"?"color:#dc2626":""}">${c.visaStatus}</td>
       <td align="right"><b>${fmt(fare)}</b></td><td align="right" style="color:#16a34a">${fmt(paid)}</td>
       <td align="right" style="${balance>0?"color:#dc2626;font-weight:700":"color:#16a34a"}">${fmt(Math.abs(balance))}${balance<0?" CR":""}</td>
@@ -185,7 +232,7 @@ function printManifest(tour,customers){
   td{padding:5px 7px;border-bottom:1px solid #e5e7eb}tr:nth-child(even){background:#f9fafb}
   .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px}
   .lbl{font-size:9px;text-transform:uppercase;color:#6b7280;font-weight:700}.val{font-size:12px;font-weight:700}
-  .tot{margin-top:12px;text-align:right;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 16px;border-radius:6px;display:flex;justify-content:flex-end;gap:24px}
+  .tot{margin-top:12px;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 16px;border-radius:6px;display:flex;justify-content:flex-end;gap:24px}
   @media print{@page{margin:10mm}}</style></head><body>
   <div style="display:flex;justify-content:space-between;border-bottom:2px solid #1e3a5f;padding-bottom:12px;margin-bottom:12px">
     <div><div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px">Tour Manifest</div>
@@ -202,11 +249,12 @@ function printManifest(tour,customers){
     <div><div class="lbl">Price Today</div><div class="val" style="color:#166534">${fmt(priceToday)}</div></div>
     <div><div class="lbl">Discount</div><div class="val">${fmt(disc)}</div></div>
     <div><div class="lbl">Single Supp.</div><div class="val">${fmt(tour.singleSupplement)}</div></div>
-    <div><div class="lbl">Meal Incl.</div><div class="val">${tour.mealIncluded||"—"}</div></div>
-    <div><div class="lbl">Meal Excl.</div><div class="val">${tour.mealExcluded||"—"}</div></div>
+    <div><div class="lbl">Meals Incl.</div><div class="val">${tour.mealIncluded||"—"}</div></div>
+    <div><div class="lbl">Meals Excl.</div><div class="val">${tour.mealExcluded||"—"}</div></div>
   </div>
+  ${flightBlock}
   <table><thead><tr><th>#</th><th>Full Name</th><th>Contact</th><th>Passport No.</th><th>Expiry</th>
-  <th>Room / Partner</th><th>Meal Pref.</th><th>Flight Ref</th><th>Visa</th>
+  <th>Room / Partner</th><th>Meal Pref.</th><th>Flight Ref / Seat</th><th>Visa</th>
   <th>Tour Fare</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
   <tbody>${rows}</tbody></table>
   <div class="tot">
@@ -222,16 +270,31 @@ function printManifest(tour,customers){
 }
 
 // ── EMPTY TEMPLATES ───────────────────────────────────────────────────────────
-const ET={id:"",tourCode:"",tourName:"",airline:"",tourManager:"",departureDate:"",arrivalDate:"",status:"Draft",normalPrice:"",singleSupplement:"",mealIncluded:"",mealExcluded:"",specialDiscount:"",isSpecialDiscount:false};
-const EC={id:"",tourCode:"",title:"Mr",surname:"",name:"",contact:"",email:"",address:"",roomType:"Twin",roomPartner:"",mealRestriction:"None",flightExtension:"",hotelExtension:"",otherExtension:"",upgradeAmount:"",groundTourOnly:false,payment1:"",payment2:"",payment3:"",dob:"",passportNo:"",nationality:"Malaysian",passportIssue:"",passportExpiry:"",passportDriveUrl:"",flightRefCode:"",flightPrice:"",flightSeat:"",domesticFlight:"",emergencyContact:"",emergencyPhone:"",visaStatus:"Not Required",insurancePolicyNo:"",insuranceAmount:"",bookingSource:"Walk-in",specialNeeds:"",notes:"",isRegular:false,status:"Active",cancelReason:"",cancelRefundAmount:"",cancelVoucherAmount:"",cancelCarryForward:"",cancelRefundDone:false,cancelVoucherIssued:false,transferFromTour:"",transferToTour:""};
+const ET={id:"",tourCode:"",tourName:"",airline:"",tourManager:"",departureDate:"",arrivalDate:"",status:"Pending",
+  normalPrice:"",singleSupplement:"",mealIncluded:"",mealExcluded:"",specialDiscount:"",isSpecialDiscount:false,
+  flightPNR:"",groupSeats:"",
+  depFlight1Code:"",depFlight1Date:"",depFlight1From:"",depFlight1To:"",depFlight1Depart:"",depFlight1Arrive:"",
+  depFlight2Code:"",depFlight2Date:"",depFlight2From:"",depFlight2To:"",depFlight2Depart:"",depFlight2Arrive:"",
+  arrFlight1Code:"",arrFlight1Date:"",arrFlight1From:"",arrFlight1To:"",arrFlight1Depart:"",arrFlight1Arrive:"",
+  arrFlight2Code:"",arrFlight2Date:"",arrFlight2From:"",arrFlight2To:"",arrFlight2Depart:"",arrFlight2Arrive:""};
+
+const EC={id:"",tourCode:"",title:"Mr",surname:"",name:"",contact:"",email:"",address:"",
+  roomType:"Twin",roomPartner:"",mealRestriction:"None",flightExtension:"",hotelExtension:"",otherExtension:"",
+  upgradeAmount:"",groundTourOnly:false,payment1:"",payment2:"",payment3:"",
+  dob:"",passportNo:"",nationality:"Malaysian",passportIssue:"",passportExpiry:"",passportDriveUrl:"",
+  flightRefCode:"",flightPrice:"",flightSeat:"",domesticFlight:"",
+  emergencyContact:"",emergencyPhone:"",visaStatus:"Not Required",insurancePolicyNo:"",insuranceAmount:"",
+  bookingSource:"Walk-in",specialNeeds:"",notes:"",isRegular:false,status:"Active",
+  cancelReason:"",cancelRefundAmount:"",cancelVoucherAmount:"",cancelCarryForward:"",
+  cancelRefundDone:false,cancelVoucherIssued:false,transferFromTour:"",transferToTour:""};
 
 // ── UI ATOMS ──────────────────────────────────────────────────────────────────
 function Badge({status}){
-  const m={Draft:"#94a3b8",Confirmed:"#3b82f6",Departed:"#f59e0b",Completed:"#22c55e",Cancelled:"#ef4444",Active:"#22c55e",Transferred:"#a855f7"};
+  const m={Pending:"#94a3b8",Confirmed:"#3b82f6",Departed:"#f59e0b",Completed:"#22c55e",Cancelled:"#ef4444",Active:"#22c55e",Transferred:"#a855f7"};
   return <span style={{background:m[status]||"#94a3b8",color:"#fff",padding:"2px 10px",borderRadius:99,fontSize:11,fontWeight:700,whiteSpace:"nowrap"}}>{status}</span>;
 }
-function Inp({label,value,onChange,type="text",required,style,disabled,options,placeholder}){
-  const b={width:"100%",padding:"7px 10px",border:"1px solid #d1d5db",borderRadius:7,fontSize:13,background:disabled?"#f3f4f6":"#fff",color:"#1e293b",boxSizing:"border-box",outline:"none"};
+function Inp({label,value,onChange,type="text",required,style,disabled,options,placeholder,small}){
+  const b={width:"100%",padding:small?"5px 8px":"7px 10px",border:"1px solid #d1d5db",borderRadius:7,fontSize:small?12:13,background:disabled?"#f3f4f6":"#fff",color:"#1e293b",boxSizing:"border-box",outline:"none"};
   return(
     <div style={{display:"flex",flexDirection:"column",gap:3,...style}}>
       {label&&<label style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",letterSpacing:.5}}>{label}{required&&<span style={{color:"#ef4444"}}> *</span>}</label>}
@@ -253,6 +316,27 @@ function Btn({children,onClick,variant="default",small,disabled}){
 function G({n,gap=12,children}){return <div style={{display:"grid",gridTemplateColumns:`repeat(${n},1fr)`,gap}}>{children}</div>;}
 function Spinner(){return <span style={{display:"inline-block",width:14,height:14,border:"2px solid rgba(255,255,255,.4)",borderTop:"2px solid #fff",borderRadius:"50%",animation:"spin .7s linear infinite"}}/>;}
 
+// ── FLIGHT ROW COMPONENT ──────────────────────────────────────────────────────
+// Each flight leg: Code | Date | From | To | Depart | Arrive
+function FlightLeg({prefix, label, t, u}) {
+  return (
+    <div style={{background:"#f8fafc",borderRadius:8,padding:10,border:"1px solid #e2e8f0"}}>
+      <div style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase",marginBottom:8}}>{label}</div>
+      <div style={{display:"grid",gridTemplateColumns:"100px 90px 70px 70px 80px 80px",gap:6}}>
+        <Inp label="Flight Code" value={t[prefix+"Code"]} onChange={v=>u(prefix+"Code",v)} placeholder="QR125" small/>
+        <Inp label="Date" value={t[prefix+"Date"]} onChange={v=>u(prefix+"Date",v)} placeholder="17MAR" small/>
+        <Inp label="From" value={t[prefix+"From"]} onChange={v=>u(prefix+"From",v)} placeholder="KUL" small/>
+        <Inp label="To" value={t[prefix+"To"]} onChange={v=>u(prefix+"To",v)} placeholder="DOH" small/>
+        <Inp label="Depart" value={t[prefix+"Depart"]} onChange={v=>u(prefix+"Depart",v)} placeholder="02:40" small/>
+        <Inp label="Arrive" value={t[prefix+"Arrive"]} onChange={v=>u(prefix+"Arrive",v)} placeholder="05:15" small/>
+      </div>
+      {t[prefix+"Code"]&&<div style={{marginTop:6,padding:"5px 10px",background:"#1e293b",borderRadius:6,color:"#e2e8f0",fontSize:11,fontFamily:"monospace"}}>
+        {t[prefix+"Code"]} {t[prefix+"Date"]} {t[prefix+"From"]} {t[prefix+"To"]} {t[prefix+"Depart"]} {t[prefix+"Arrive"]}
+      </div>}
+    </div>
+  );
+}
+
 // ── SYNC BAR ──────────────────────────────────────────────────────────────────
 function SyncBar({state,lastSync,error,onRetry}){
   const cfg={
@@ -273,7 +357,7 @@ function SignInScreen({onSignIn}){
   const go=async()=>{
     setBusy(true);setErr("");
     try{await signIn(onSignIn);}
-    catch(e){setErr("Sign-in failed. Make sure pop-ups are allowed and claude.ai is added to Authorised Origins in Google Cloud Console.");}
+    catch(e){setErr("Sign-in failed. Make sure pop-ups are allowed and that https://jingwei-ee.github.io is added as an Authorised JavaScript Origin in Google Cloud Console.");}
     setBusy(false);
   };
   return(
@@ -289,10 +373,9 @@ function SignInScreen({onSignIn}){
         <div style={{marginTop:20,background:"#f8fafc",borderRadius:10,padding:14,textAlign:"left",fontSize:12,color:"#475569",lineHeight:1.8}}>
           <div style={{fontWeight:700,marginBottom:4,color:"#1e293b"}}>Before signing in, ensure:</div>
           <div>1. Google Sheets API is enabled in Google Cloud Console</div>
-          <div>2. <code style={{background:"#e2e8f0",padding:"1px 5px",borderRadius:4}}>https://claude.ai</code> is added as an Authorised JavaScript Origin</div>
+          <div>2. <code style={{background:"#e2e8f0",padding:"1px 5px",borderRadius:4}}>https://jingwei-ee.github.io</code> is added as an Authorised JavaScript Origin</div>
           <div>3. Your Sheet is shared as "Anyone with link can edit"</div>
         </div>
-        <p style={{marginTop:16,fontSize:11,color:"#94a3b8"}}>Your data stays in your own Google Sheet — never stored elsewhere.</p>
       </div>
     </div>
   );
@@ -332,29 +415,108 @@ function PassportUpload({cust,tourCode,onSaved}){
 }
 
 // ── TOUR FORM ─────────────────────────────────────────────────────────────────
-function TourForm({initial,onSave,onCancel,saving}){
+function TourForm({initial,onSave,onCancel,saving,paxCount}){
   const [t,setT]=useState({...ET,...initial});
   const u=(k,v)=>setT(p=>({...p,[k]:v}));
   const dn=calcDN(t.departureDate,t.arrivalDate);
-  const save=()=>{if(!t.tourCode||!t.tourName)return alert("Tour Code and Tour Name required.");onSave({...t,id:t.id||"tour_"+Date.now()});};
+
+  // Auto-suggest status based on pax
+  const suggestedStatus = paxCount>=18 ? "Confirmed" : t.status;
+
+  const save=()=>{
+    if(!t.tourCode||!t.tourName)return alert("Tour Code and Tour Name required.");
+    // Auto-set status on save
+    const finalStatus = (!t.isSpecialDiscount && paxCount>=18) ? "Confirmed" : t.status;
+    onSave({...t,status:finalStatus,id:t.id||"tour_"+Date.now()});
+  };
+
+  const FORM_TABS=[{key:"basic",icon:"📋",label:"Basic Info"},{key:"flights",icon:"✈️",label:"Flight Details"}];
+  const [fTab,setFTab]=useState("basic");
+
   return(
-    <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      <G n={3}><Inp label="Tour Code" value={t.tourCode} onChange={v=>u("tourCode",v)} required/><Inp label="Tour Name" value={t.tourName} onChange={v=>u("tourName",v)} required style={{gridColumn:"span 2"}}/></G>
-      <G n={3}><Inp label="Airline" value={t.airline} onChange={v=>u("airline",v)}/><Inp label="Tour Manager" value={t.tourManager} onChange={v=>u("tourManager",v)}/><Inp label="Status" value={t.status} onChange={v=>u("status",v)} options={TOUR_STATUSES}/></G>
-      <G n={4}>
-        <Inp label="Departure Date" value={t.departureDate} onChange={v=>u("departureDate",v)} type="date"/>
-        <Inp label="Arrival Date" value={t.arrivalDate} onChange={v=>u("arrivalDate",v)} type="date"/>
-        <div style={{display:"flex",flexDirection:"column",gap:3}}><label style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase"}}>Days / Nights</label><div style={{padding:"8px 10px",background:"#f8fafc",borderRadius:7,fontSize:13,border:"1px solid #e2e8f0",color:"#475569"}}>{dn.days>0?`${dn.days}D / ${dn.nights}N`:"—"}</div></div>
-      </G>
-      <div style={{background:"#f8fafc",padding:14,borderRadius:10}}>
-        <div style={{fontWeight:700,fontSize:11,color:"#64748b",textTransform:"uppercase",marginBottom:10}}>Default Pricing & Inclusions</div>
-        <G n={4}><Inp label="Normal Price (RM)" value={t.normalPrice} onChange={v=>u("normalPrice",v)} type="number" placeholder="0.00"/><Inp label="Single Supplement (RM)" value={t.singleSupplement} onChange={v=>u("singleSupplement",v)} type="number" placeholder="0.00"/><Inp label="Meal Included" value={t.mealIncluded} onChange={v=>u("mealIncluded",v)} placeholder="e.g. Breakfast"/><Inp label="Meal Excluded" value={t.mealExcluded} onChange={v=>u("mealExcluded",v)} placeholder="e.g. Lunch"/></G>
-        <div style={{display:"flex",alignItems:"center",gap:14,marginTop:10}}>
-          <Chk label="Override discount (special departure)" checked={boolify(t.isSpecialDiscount)} onChange={v=>u("isSpecialDiscount",v)}/>
-          {boolify(t.isSpecialDiscount)&&<Inp label="Special Discount (RM)" value={t.specialDiscount} onChange={v=>u("specialDiscount",v)} type="number" style={{width:200}}/>}
-        </div>
+    <div style={{display:"flex",flexDirection:"column",gap:0}}>
+      <div style={{display:"flex",gap:3,paddingBottom:12,borderBottom:"1px solid #e2e8f0",marginBottom:16}}>
+        {FORM_TABS.map(ft=><button key={ft.key} onClick={()=>setFTab(ft.key)} style={{padding:"7px 14px",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:fTab===ft.key?"#2563eb":"transparent",color:fTab===ft.key?"#fff":"#64748b",display:"flex",alignItems:"center",gap:4}}>{ft.icon} {ft.label}</button>)}
       </div>
-      <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}><Btn onClick={onCancel}>Cancel</Btn><Btn onClick={save} variant="primary" disabled={saving}>{saving?<><Spinner/> Saving…</>:"Save Tour"}</Btn></div>
+
+      {fTab==="basic"&&<div style={{display:"flex",flexDirection:"column",gap:14}}>
+        <G n={3}><Inp label="Tour Code" value={t.tourCode} onChange={v=>u("tourCode",v)} required/><Inp label="Tour Name" value={t.tourName} onChange={v=>u("tourName",v)} required style={{gridColumn:"span 2"}}/></G>
+        {/* CHANGE: Removed Tour Manager from here — it stays in tour record but is edited in tour detail */}
+        <G n={2}><Inp label="Airline" value={t.airline} onChange={v=>u("airline",v)}/><Inp label="Tour Manager" value={t.tourManager} onChange={v=>u("tourManager",v)}/></G>
+        <G n={4}>
+          <Inp label="Departure Date" value={t.departureDate} onChange={v=>u("departureDate",v)} type="date"/>
+          <Inp label="Arrival Date" value={t.arrivalDate} onChange={v=>u("arrivalDate",v)} type="date"/>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase"}}>Days / Nights</label>
+            <div style={{padding:"8px 10px",background:"#f8fafc",borderRadius:7,fontSize:13,border:"1px solid #e2e8f0",color:"#475569"}}>{dn.days>0?`${dn.days}D / ${dn.nights}N`:"—"}</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:3}}>
+            <label style={{fontSize:10,fontWeight:700,color:"#64748b",textTransform:"uppercase"}}>Status</label>
+            <select value={t.status} onChange={e=>u("status",e.target.value)} style={{padding:"8px 10px",border:"1px solid #d1d5db",borderRadius:7,fontSize:13,background:"#fff",outline:"none"}}>
+              {TOUR_STATUSES.map(s=><option key={s}>{s}</option>)}
+            </select>
+            {paxCount>=18&&t.status!=="Confirmed"&&<div style={{fontSize:10,color:"#16a34a",fontWeight:600}}>⚡ Will auto-confirm (18+ pax)</div>}
+          </div>
+        </G>
+        <div style={{background:"#f8fafc",padding:14,borderRadius:10}}>
+          <div style={{fontWeight:700,fontSize:11,color:"#64748b",textTransform:"uppercase",marginBottom:10}}>Default Pricing & Inclusions</div>
+          {/* CHANGE: Meal Included/Excluded are now number inputs */}
+          <G n={4}>
+            <Inp label="Normal Price (RM)" value={t.normalPrice} onChange={v=>u("normalPrice",v)} type="number" placeholder="0"/>
+            <Inp label="Single Supplement (RM)" value={t.singleSupplement} onChange={v=>u("singleSupplement",v)} type="number" placeholder="0"/>
+            <Inp label="Meals Included (count)" value={t.mealIncluded} onChange={v=>u("mealIncluded",v)} type="number" placeholder="e.g. 46"/>
+            <Inp label="Meals Excluded (count)" value={t.mealExcluded} onChange={v=>u("mealExcluded",v)} type="number" placeholder="e.g. 2"/>
+          </G>
+          <div style={{display:"flex",alignItems:"center",gap:14,marginTop:10}}>
+            <Chk label="Override discount (special departure)" checked={boolify(t.isSpecialDiscount)} onChange={v=>u("isSpecialDiscount",v)}/>
+            {boolify(t.isSpecialDiscount)&&<Inp label="Special Discount (RM)" value={t.specialDiscount} onChange={v=>u("specialDiscount",v)} type="number" style={{width:200}}/>}
+          </div>
+        </div>
+      </div>}
+
+      {fTab==="flights"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <div style={{background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:10,padding:14}}>
+          <div style={{fontWeight:700,fontSize:11,color:"#0369a1",textTransform:"uppercase",marginBottom:10}}>🔖 PNR & Group Seats</div>
+          <G n={2}>
+            <Inp label="Flight PNR" value={t.flightPNR} onChange={v=>u("flightPNR",v)} placeholder="e.g. GQR.9ZWQW7"/>
+            <Inp label="Group Seats (Number)" value={t.groupSeats} onChange={v=>u("groupSeats",v)} type="number" placeholder="e.g. 28"/>
+          </G>
+        </div>
+
+        <div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:14}}>
+          <div style={{fontWeight:700,fontSize:12,color:"#166534",marginBottom:12}}>🛫 DEPARTURE DAY (Outbound — Hometown → Destination)</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <FlightLeg prefix="depFlight1" label="Leg 1 — e.g. KUL → DOH" t={t} u={u}/>
+            <FlightLeg prefix="depFlight2" label="Leg 2 — e.g. DOH → VCE (optional)" t={t} u={u}/>
+          </div>
+        </div>
+
+        <div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:14}}>
+          <div style={{fontWeight:700,fontSize:12,color:"#dc2626",marginBottom:12}}>🛬 ARRIVAL DAY (Return — Destination → Hometown)</div>
+          <div style={{display:"flex",flexDirection:"column",gap:10}}>
+            <FlightLeg prefix="arrFlight1" label="Leg 1 — e.g. MXP → DOH" t={t} u={u}/>
+            <FlightLeg prefix="arrFlight2" label="Leg 2 — e.g. DOH → KUL (optional)" t={t} u={u}/>
+          </div>
+        </div>
+
+        {/* Live preview */}
+        {(t.depFlight1Code||t.arrFlight1Code)&&<div style={{background:"#1e293b",borderRadius:10,padding:14}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",marginBottom:8}}>Preview</div>
+          <div style={{fontFamily:"monospace",fontSize:12,color:"#e2e8f0",lineHeight:2}}>
+            {t.flightPNR&&<div style={{color:"#fbbf24"}}>PNR: {t.flightPNR} | Seats: {t.groupSeats||"—"}</div>}
+            {t.depFlight1Code&&<div>{t.depFlight1Code} {t.depFlight1Date} {t.depFlight1From} {t.depFlight1To} {t.depFlight1Depart} {t.depFlight1Arrive}</div>}
+            {t.depFlight2Code&&<div>{t.depFlight2Code} {t.depFlight2Date} {t.depFlight2From} {t.depFlight2To} {t.depFlight2Depart} {t.depFlight2Arrive}</div>}
+            {(t.depFlight1Code&&t.arrFlight1Code)&&<div style={{color:"#475569",margin:"4px 0"}}>— — — — —</div>}
+            {t.arrFlight1Code&&<div>{t.arrFlight1Code} {t.arrFlight1Date} {t.arrFlight1From} {t.arrFlight1To} {t.arrFlight1Depart} {t.arrFlight1Arrive}</div>}
+            {t.arrFlight2Code&&<div>{t.arrFlight2Code} {t.arrFlight2Date} {t.arrFlight2From} {t.arrFlight2To} {t.arrFlight2Depart} {t.arrFlight2Arrive}</div>}
+          </div>
+        </div>}
+      </div>}
+
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:16,paddingTop:14,borderTop:"1px solid #e2e8f0"}}>
+        <Btn onClick={onCancel}>Cancel</Btn>
+        <Btn onClick={save} variant="primary" disabled={saving}>{saving?<><Spinner/> Saving…</>:"Save Tour"}</Btn>
+      </div>
     </div>
   );
 }
@@ -387,7 +549,7 @@ function CustomerSearch({customers,tours,onEdit}){
             const {fare}=calcFare(c,tour,ap);
             const warn=c.passportExpiry&&tour?.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6;
             return(<tr key={c.id} style={{borderBottom:"1px solid #f1f5f9"}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background=""}>
-              <td style={{padding:"8px 10px",fontWeight:600,whiteSpace:"nowrap"}}>{c.title} {c.surname} {c.name}{c.isRegular&&<span style={{marginLeft:4,fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:99}}>Regular</span>}</td>
+              <td style={{padding:"8px 10px",fontWeight:600,whiteSpace:"nowrap"}}>{c.title} {c.surname} {c.name}{boolify(c.isRegular)&&<span style={{marginLeft:4,fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:99}}>Regular</span>}</td>
               <td style={{padding:"8px 10px"}}><span style={{background:"#dbeafe",color:"#1d4ed8",padding:"2px 8px",borderRadius:99,fontSize:11,fontWeight:700}}>{c.tourCode}</span></td>
               <td style={{padding:"8px 10px",color:"#475569"}}>{c.contact||"—"}</td>
               <td style={{padding:"8px 10px",color:"#475569",maxWidth:130,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.email||"—"}</td>
@@ -407,6 +569,7 @@ function CustomerSearch({customers,tours,onEdit}){
 }
 
 // ── CUSTOMER FORM ─────────────────────────────────────────────────────────────
+// CHANGE: Removed Extension, Price, Payment tabs per request (point 5)
 function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){
   const [c,setC]=useState({...EC,...initial});
   const [tab,setTab]=useState("personal");
@@ -423,7 +586,16 @@ function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){
   const ap=customers.filter(x=>x.tourCode===c.tourCode&&x.status==="Active"&&x.id!==c.id).length+(c.status==="Active"?1:0);
   const {disc,normal,pkg,fare,paid,balance}=calcFare(c,tour,ap);
   const save=()=>{if(!c.tourCode||!c.surname||!c.name)return alert("Tour Code, Surname and Name required.");onSave({...c,id:c.id||"cust_"+Date.now()});};
-  const TABS=[{key:"personal",icon:"👤",label:"Personal"},{key:"preference",icon:"🛏️",label:"Preference"},{key:"extension",icon:"✈️",label:"Extension"},{key:"price",icon:"💰",label:"Price"},{key:"payment",icon:"💳",label:"Payment"},{key:"passport",icon:"📗",label:"Passport"},{key:"flight",icon:"🛫",label:"Flight"},{key:"status",icon:"📋",label:"Status"}];
+  // CHANGE: Removed Extension tab; kept Price & Payment for financial tracking
+  const TABS=[
+    {key:"personal",icon:"👤",label:"Personal"},
+    {key:"preference",icon:"🛏️",label:"Preference"},
+    {key:"price",icon:"💰",label:"Price"},
+    {key:"payment",icon:"💳",label:"Payment"},
+    {key:"passport",icon:"📗",label:"Passport"},
+    {key:"flight",icon:"🛫",label:"Flight"},
+    {key:"status",icon:"📋",label:"Status"},
+  ];
   return(
     <div style={{display:"flex",flexDirection:"column"}}>
       <div style={{display:"flex",gap:3,paddingBottom:12,borderBottom:"1px solid #e2e8f0",marginBottom:16,flexWrap:"wrap"}}>
@@ -456,12 +628,6 @@ function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){
         <G n={2}><Inp label="Insurance Policy No." value={c.insurancePolicyNo} onChange={v=>u("insurancePolicyNo",v)}/><Inp label="Insurance Coverage (RM)" value={c.insuranceAmount} onChange={v=>u("insuranceAmount",v)} type="number"/></G>
         <Inp label="Internal Notes" value={c.notes} onChange={v=>u("notes",v)} placeholder="Special notes…"/>
       </div>}
-      {tab==="extension"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <Sec icon="✈️" title="Extensions"/>
-        <Inp label="Flight & Hotel Extension" value={c.flightExtension} onChange={v=>u("flightExtension",v)}/>
-        <Inp label="Hotel Extension Details" value={c.hotelExtension} onChange={v=>u("hotelExtension",v)}/>
-        <Inp label="Other Extensions / Add-ons" value={c.otherExtension} onChange={v=>u("otherExtension",v)}/>
-      </div>}
       {tab==="price"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
         <Sec icon="💰" title="Pricing"/>
         <div style={{background:"#f0f9ff",border:"1px solid #bae6fd",borderRadius:10,padding:14,display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
@@ -484,13 +650,13 @@ function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){
           <Inp label="Nationality" value={c.nationality} onChange={v=>u("nationality",v)} options={NATIONALITIES}/>
         </G>
         <G n={3}><Inp label="Passport Number" value={c.passportNo} onChange={v=>u("passportNo",v)}/><Inp label="Issue Date" value={c.passportIssue} onChange={v=>u("passportIssue",v)} type="date"/><Inp label="Expiry Date" value={c.passportExpiry} onChange={v=>u("passportExpiry",v)} type="date"/></G>
-        {c.passportExpiry&&tour?.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6&&<div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,padding:10,color:"#dc2626",fontSize:12,fontWeight:600}}>⚠️ Passport expires within 6 months of departure date — may be invalid for travel!</div>}
+        {c.passportExpiry&&tour?.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6&&<div style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,padding:10,color:"#dc2626",fontSize:12,fontWeight:600}}>⚠️ Passport expires within 6 months of departure — may be invalid!</div>}
         <Sec icon="☁️" title="Passport Photo — Google Drive"/>
         <PassportUpload cust={c} tourCode={c.tourCode||"UNKNOWN"} onSaved={url=>u("passportDriveUrl",url)}/>
       </div>}
       {tab==="flight"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <Sec icon="🛫" title="Flight Details"/>
-        <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:8,padding:10,fontSize:12,color:"#92400e"}}>ℹ️ Airline and departure details are shared across the tour. The fields below may differ per passenger.</div>
+        <Sec icon="🛫" title="Individual Flight Details"/>
+        <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:8,padding:10,fontSize:12,color:"#92400e"}}>ℹ️ Group flight details are set on the Tour. These fields are unique per passenger (seat, reference, domestic leg).</div>
         <G n={2}><Inp label="Flight Reference Code (per pax)" value={c.flightRefCode} onChange={v=>u("flightRefCode",v)}/><Inp label="Flight Seat No." value={c.flightSeat} onChange={v=>u("flightSeat",v)}/></G>
         <G n={2}><Inp label="Flight Price (RM)" value={c.flightPrice} onChange={v=>u("flightPrice",v)} type="number"/><Inp label="Domestic Flight" value={c.domesticFlight} onChange={v=>u("domesticFlight",v)} placeholder="e.g. MH1234 KUL–PEN"/></G>
       </div>}
@@ -516,12 +682,17 @@ function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){
 // ── TOUR DETAIL ───────────────────────────────────────────────────────────────
 function TourDetail({tour,customers,tours,onAdd,onEditCust,onEditTour,onBack}){
   const tc=customers.filter(c=>c.tourCode===tour.tourCode);
+  // CHANGE: pax count excludes tour manager
   const ap=tc.filter(c=>c.status==="Active").length;
   const disc=boolify(tour.isSpecialDiscount)?Number(tour.specialDiscount||0):getDiscount(ap);
   const today=Number(tour.normalPrice||0)-disc;
   const dn=calcDN(tour.departureDate,tour.arrivalDate);
   const tier=DISCOUNT_TIERS.find(t=>ap>=t.min&&ap<=t.max);
   const totBal=tc.reduce((s,c)=>s+calcFare(c,tour,ap).balance,0);
+  const pc=paxColor(ap);
+
+  const hasFlights=tour.flightPNR||tour.depFlight1Code||tour.arrFlight1Code;
+
   return(
     <div style={{display:"flex",flexDirection:"column",gap:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
@@ -534,15 +705,46 @@ function TourDetail({tour,customers,tours,onAdd,onEditCust,onEditTour,onBack}){
           <Btn onClick={onAdd} variant="primary">+ Add Customer</Btn>
         </div>
       </div>
+
       <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10}}>
-        {[{l:"Airline",v:tour.airline||"—"},{l:"Departure",v:fmtDate(tour.departureDate)},{l:"Arrival",v:fmtDate(tour.arrivalDate)},{l:"Duration",v:dn.days>0?`${dn.days}D/${dn.nights}N`:"—"},{l:"Tour Manager",v:tour.tourManager||"—"},{l:"Active Pax",v:`${ap} pax`,hi:"#dbeafe"},{l:"Normal Price",v:fmt(tour.normalPrice)},{l:"Discount",v:fmt(disc),sub:tier?.label},{l:"Price Today",v:fmt(today),hi:"#dcfce7",bold:true},{l:"Single Supp.",v:fmt(tour.singleSupplement)},{l:"Meal Incl.",v:tour.mealIncluded||"—"},{l:"Outstanding",v:fmt(Math.abs(totBal)),sub:totBal<0?"Overpaid":"To collect",hi:totBal>0?"#fef2f2":undefined}].map(({l,v,sub,hi,bold})=>(
-          <Card key={l} style={{padding:12,background:hi||"#fff"}}>
-            <div style={{fontSize:10,color:"#64748b",textTransform:"uppercase",fontWeight:700}}>{l}</div>
-            <div style={{fontSize:13,fontWeight:bold?800:700,color:"#1e293b",marginTop:2}}>{v}</div>
+        {[{l:"Airline",v:tour.airline||"—"},{l:"Departure",v:fmtDate(tour.departureDate)},{l:"Arrival",v:fmtDate(tour.arrivalDate)},{l:"Duration",v:dn.days>0?`${dn.days}D / ${dn.nights}N`:"—"},{l:"Tour Manager",v:tour.tourManager||"—"},
+          // CHANGE: Pax with colour
+          {l:"Active Pax",v:ap,isPax:true},
+          {l:"Normal Price",v:fmt(tour.normalPrice)},{l:"Discount",v:fmt(disc),sub:tier?.label},{l:"Price Today",v:fmt(today),hi:"#dcfce7",bold:true},{l:"Single Supp.",v:fmt(tour.singleSupplement)},
+          // CHANGE: Meal as number
+          {l:"Meals Incl.",v:tour.mealIncluded?`${tour.mealIncluded} meals`:"—"},{l:"Outstanding",v:fmt(Math.abs(totBal)),sub:totBal<0?"Overpaid":"To collect",hi:totBal>0?"#fef2f2":undefined}
+        ].map(({l,v,sub,hi,bold,isPax})=>(
+          <Card key={l} style={{padding:12,background:isPax?pc.bg:hi||"#fff"}}>
+            <div style={{fontSize:10,color:isPax?pc.col:"#64748b",textTransform:"uppercase",fontWeight:700}}>{l}</div>
+            <div style={{fontSize:isPax?22:13,fontWeight:bold||isPax?800:700,color:isPax?pc.col:"#1e293b",marginTop:2}}>{v}</div>
             {sub&&<div style={{fontSize:10,color:"#94a3b8",marginTop:1}}>{sub}</div>}
           </Card>
         ))}
       </div>
+
+      {/* CHANGE: Flight details panel in tour detail */}
+      {hasFlights&&<Card style={{background:"#f0f9ff",border:"1px solid #bae6fd"}}>
+        <Sec icon="✈️" title={`Flight Details${tour.flightPNR?" — PNR: "+tour.flightPNR:""}${tour.groupSeats?" | Group Seats: "+tour.groupSeats:""}`}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"#166534",textTransform:"uppercase",marginBottom:8}}>🛫 Departure (Outbound)</div>
+            {[["depFlight1","depFlight2"]].flat().map(p=>tour[p+"Code"]&&(
+              <div key={p} style={{fontFamily:"monospace",fontSize:12,background:"#1e293b",color:"#e2e8f0",borderRadius:6,padding:"6px 10px",marginBottom:4}}>
+                {tour[p+"Code"]} {tour[p+"Date"]} {tour[p+"From"]}→{tour[p+"To"]} {tour[p+"Depart"]}–{tour[p+"Arrive"]}
+              </div>
+            ))}
+          </div>
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:"#dc2626",textTransform:"uppercase",marginBottom:8}}>🛬 Return (Inbound)</div>
+            {[["arrFlight1","arrFlight2"]].flat().map(p=>tour[p+"Code"]&&(
+              <div key={p} style={{fontFamily:"monospace",fontSize:12,background:"#1e293b",color:"#e2e8f0",borderRadius:6,padding:"6px 10px",marginBottom:4}}>
+                {tour[p+"Code"]} {tour[p+"Date"]} {tour[p+"From"]}→{tour[p+"To"]} {tour[p+"Depart"]}–{tour[p+"Arrive"]}
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>}
+
       <Card>
         <Sec icon="👥" title={`Customers (${tc.length} total · ${ap} active)`}/>
         {tc.length===0?<div style={{textAlign:"center",padding:32,color:"#94a3b8"}}>No customers yet. Click "+ Add Customer" to start.</div>:(
@@ -554,7 +756,7 @@ function TourDetail({tour,customers,tours,onAdd,onEditCust,onEditTour,onBack}){
                 const warn=c.passportExpiry&&tour.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6;
                 return(<tr key={c.id||i} style={{borderBottom:"1px solid #f1f5f9",opacity:c.status!=="Active"?.6:1}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background=""}>
                   <td style={{padding:"8px 10px",color:"#94a3b8"}}>{i+1}</td>
-                  <td style={{padding:"8px 10px",fontWeight:600,whiteSpace:"nowrap"}}>{c.title} {c.surname} {c.name}{boolify(c.isRegular)&&<span style={{marginLeft:4,fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:99}}>Regular</span>}{c.specialNeeds&&<span style={{marginLeft:4,fontSize:9,background:"#fce7f3",color:"#9d174d",padding:"1px 5px",borderRadius:99}}>♿</span>}</td>
+                  <td style={{padding:"8px 10px",fontWeight:600,whiteSpace:"nowrap"}}>{c.title} {c.surname} {c.name}{boolify(c.isRegular)&&<span style={{marginLeft:4,fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:99}}>Reg</span>}{c.specialNeeds&&<span style={{marginLeft:4,fontSize:9,background:"#fce7f3",color:"#9d174d",padding:"1px 5px",borderRadius:99}}>♿</span>}</td>
                   <td style={{padding:"8px 10px",color:"#475569"}}>{c.contact||"—"}</td>
                   <td style={{padding:"8px 10px",whiteSpace:"nowrap"}}>{c.roomType}{c.roomPartner?" / "+c.roomPartner:""}</td>
                   <td style={{padding:"8px 10px"}}>{c.mealRestriction!=="None"?c.mealRestriction:"—"}</td>
@@ -607,144 +809,9 @@ function App(){
   const saveTour=async(t)=>{
     setSav(true);setSS("saving");
     try{
+      // CHANGE: auto-confirm if 18+ pax and not special case
+      const pax=customers.filter(c=>c.tourCode===t.tourCode&&c.status==="Active").length;
+      const finalStatus=(!boolify(t.isSpecialDiscount)&&pax>=18&&t.status!=="Cancelled"&&t.status!=="Departed"&&t.status!=="Completed")?"Confirmed":t.status;
+      const finalTour={...t,status:finalStatus};
       const idx=tours.findIndex(x=>x.id===t.id);
-      const newT=idx>=0?[...tours.slice(0,idx),t,...tours.slice(idx+1)]:[...tours,t];
-      await writeAllRows(SHEETS.TOURS,TOUR_COLS,newT);
-      setT(newT);setSS("saved");setLS(Date.now());
-      setV(selTour?"tourDetail":"dashboard");if(!selTour)setSTr(t);
-    }catch(e){setSS("error");setSE(e.message);}
-    setSav(false);
-  };
-
-  const saveCust=async(c)=>{
-    setSav(true);setSS("saving");
-    try{
-      const idx=customers.findIndex(x=>x.id===c.id);
-      const newC=idx>=0?[...customers.slice(0,idx),c,...customers.slice(idx+1)]:[...customers,c];
-      await writeAllRows(SHEETS.CUSTOMERS,CUST_COLS,newC);
-      setC(newC);setSS("saved");setLS(Date.now());
-      setSCS(false);setV("tourDetail");
-    }catch(e){setSS("error");setSE(e.message);}
-    setSav(false);
-  };
-
-  const refresh=async()=>{setRef(true);await loadFromSheets();setRef(false);};
-
-  const filtered=tours.filter(t=>{
-    const q=searchQ.toLowerCase();
-    return(!q||t.tourCode.toLowerCase().includes(q)||t.tourName.toLowerCase().includes(q)||(t.tourManager||"").toLowerCase().includes(q))
-      &&(statFilt==="All"||t.status===statFilt);
-  });
-
-  const Modal=({title,children,onClose,wide})=>(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"24px 16px",overflowY:"auto"}}>
-      <div style={{background:"#fff",borderRadius:16,width:`min(${wide?"1100px":"900px"},98vw)`,boxShadow:"0 24px 60px rgba(0,0,0,.3)"}}>
-        <div style={{padding:"16px 24px",borderBottom:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,background:"#fff",zIndex:10,borderRadius:"16px 16px 0 0"}}>
-          <span style={{fontWeight:700,fontSize:16,color:"#1e293b"}}>{title}</span>
-          <button onClick={onClose} style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:"#94a3b8",lineHeight:1}}>×</button>
-        </div>
-        <div style={{padding:24}}>{children}</div>
-      </div>
-    </div>
-  );
-
-  if(!signedIn)return <SignInScreen onSignIn={handleSignIn}/>;
-
-  const currentTour=selTour?(tours.find(t=>t.tourCode===selTour.tourCode)||selTour):null;
-
-  return(
-    <div style={{minHeight:"100vh",background:"#f1f5f9"}}>
-      {/* NAV */}
-      <div style={{background:"#0f172a",color:"#fff",padding:"0 24px",display:"flex",alignItems:"center",gap:12,height:58,position:"sticky",top:0,zIndex:100,boxShadow:"0 2px 12px rgba(0,0,0,.3)"}}>
-        <span style={{fontSize:22}}>✈️</span>
-        <span style={{fontWeight:800,fontSize:15,letterSpacing:-.3}}>Tour Ops</span>
-        <span style={{color:"#334155",fontSize:13,display:"none"}}>Management System</span>
-        <div style={{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}}>
-          <Btn onClick={refresh} variant="ghost" small disabled={refreshing}>{refreshing?<><Spinner/> Refreshing…</>:"🔄 Refresh"}</Btn>
-          <Btn onClick={()=>setSCS(true)} small>🔍 Customer Search</Btn>
-          {view!=="dashboard"&&<Btn onClick={()=>{setV("dashboard");setSTr(null);}} small>📊 Dashboard</Btn>}
-          <Btn onClick={()=>{setET(null);setV("tourForm");}} variant="primary" small>+ New Tour</Btn>
-          <Btn onClick={()=>signOut(()=>setSI(false))} variant="ghost" small>Sign Out</Btn>
-        </div>
-      </div>
-      <SyncBar state={syncState} lastSync={lastSync} error={syncError} onRetry={loadFromSheets}/>
-
-      <div style={{padding:24,maxWidth:1440,margin:"0 auto"}}>
-        {/* DASHBOARD */}
-        {view==="dashboard"&&(
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
-              {[{l:"Total Tours",v:tours.length,icon:"🗺️",c:"#dbeafe"},{l:"Active / Departed",v:tours.filter(t=>t.status==="Confirmed"||t.status==="Departed").length,icon:"✅",c:"#dcfce7"},{l:"Active Customers",v:customers.filter(c=>c.status==="Active").length,icon:"👥",c:"#f3e8ff"},{l:"Cancellations",v:customers.filter(c=>c.status==="Cancelled").length,icon:"❌",c:"#fee2e2"}].map(s=>(
-                <Card key={s.l} style={{display:"flex",alignItems:"center",gap:14}}>
-                  <div style={{width:44,height:44,borderRadius:10,background:s.c,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{s.icon}</div>
-                  <div><div style={{fontSize:11,color:"#64748b",fontWeight:700,textTransform:"uppercase"}}>{s.l}</div><div style={{fontSize:26,fontWeight:800,color:"#1e293b"}}>{s.v}</div></div>
-                </Card>
-              ))}
-            </div>
-            <div style={{display:"flex",gap:10}}>
-              <div style={{position:"relative",flex:1}}><span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:"#94a3b8"}}>🔍</span><input value={searchQ} onChange={e=>setSQ(e.target.value)} placeholder="Search by tour code, name, or manager…" style={{width:"100%",padding:"9px 12px 9px 36px",borderRadius:9,border:"1px solid #d1d5db",fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
-              <select value={statFilt} onChange={e=>setSF(e.target.value)} style={{padding:"9px 12px",borderRadius:9,border:"1px solid #d1d5db",fontSize:13,background:"#fff"}}><option value="All">All Status</option>{TOUR_STATUSES.map(s=><option key={s}>{s}</option>)}</select>
-            </div>
-            <Card>
-              <Sec icon="🗺️" title={`Tour List (${filtered.length})`}/>
-              {filtered.length===0?<div style={{textAlign:"center",padding:40,color:"#94a3b8"}}>{tours.length===0?"No tours yet. Click \"+ New Tour\" to begin.":"No tours match."}</div>:(
-                <div style={{overflowX:"auto"}}>
-                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
-                    <thead><tr style={{background:"#f8fafc"}}>{["Tour Code","Tour Name","Airline","Departure","Arrival","Days/Nights","Pax","Normal Price","Discount","Price Today","Single Supp.","Meals In","Meals Out","Manager","Status",""].map(h=><th key={h} style={{padding:"9px 10px",textAlign:"left",color:"#64748b",fontWeight:700,fontSize:11,borderBottom:"2px solid #e2e8f0",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
-                    <tbody>{filtered.map(t=>{
-                      const pax=customers.filter(c=>c.tourCode===t.tourCode&&c.status==="Active").length;
-                      const disc=boolify(t.isSpecialDiscount)?Number(t.specialDiscount||0):getDiscount(pax);
-                      const today=Number(t.normalPrice||0)-disc;
-                      const dn=calcDN(t.departureDate,t.arrivalDate);
-                      return(<tr key={t.id} style={{borderBottom:"1px solid #f1f5f9",cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background=""}>
-                        <td style={{padding:"9px 10px",fontWeight:700,color:"#2563eb"}} onClick={()=>{setSTr(t);setV("tourDetail");}}>{t.tourCode}</td>
-                        <td style={{padding:"9px 10px",fontWeight:600,color:"#1e293b"}}>{t.tourName}</td>
-                        <td style={{padding:"9px 10px",color:"#475569"}}>{t.airline||"—"}</td>
-                        <td style={{padding:"9px 10px",color:"#475569",whiteSpace:"nowrap"}}>{fmtDate(t.departureDate)}</td>
-                        <td style={{padding:"9px 10px",color:"#475569",whiteSpace:"nowrap"}}>{fmtDate(t.arrivalDate)}</td>
-                        <td style={{padding:"9px 10px",color:"#475569"}}>{dn.days>0?`${dn.days}D/${dn.nights}N`:"—"}</td>
-                        <td style={{padding:"9px 10px",textAlign:"center"}}><span style={{background:"#dbeafe",color:"#1d4ed8",padding:"2px 10px",borderRadius:99,fontWeight:700}}>{pax}</span></td>
-                        <td style={{padding:"9px 10px",color:"#475569"}}>{fmt(t.normalPrice)}</td>
-                        <td style={{padding:"9px 10px",color:"#dc2626",fontWeight:600}}>- {fmt(disc)}</td>
-                        <td style={{padding:"9px 10px",fontWeight:800,color:"#166534"}}>{fmt(today)}</td>
-                        <td style={{padding:"9px 10px",color:"#475569"}}>{fmt(t.singleSupplement)}</td>
-                        <td style={{padding:"9px 10px",color:"#475569",fontSize:11,maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.mealIncluded||"—"}</td>
-                        <td style={{padding:"9px 10px",color:"#475569",fontSize:11,maxWidth:100,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.mealExcluded||"—"}</td>
-                        <td style={{padding:"9px 10px",color:"#475569"}}>{t.tourManager||"—"}</td>
-                        <td style={{padding:"9px 10px"}}><Badge status={t.status}/></td>
-                        <td style={{padding:"9px 10px"}}>
-                          <div style={{display:"flex",gap:4}}>
-                            <Btn small onClick={()=>{setSTr(t);setV("tourDetail");}}>View</Btn>
-                            <Btn small onClick={()=>{setET(t);setV("tourForm");}}>✏️</Btn>
-                          </div>
-                        </td>
-                      </tr>);
-                    })}</tbody>
-                  </table>
-                </div>
-              )}
-            </Card>
-            <Card style={{background:"#fffbeb",border:"1px solid #fde68a"}}>
-              <Sec icon="💡" title="Auto-Discount Tier Reference"/>
-              <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-                {DISCOUNT_TIERS.filter(t=>t.discount>0).map(t=><div key={t.label} style={{background:"#fff",border:"1px solid #fde68a",borderRadius:8,padding:"8px 14px",fontSize:12,fontWeight:700}}>{t.label}</div>)}
-                <div style={{background:"#fff",border:"1px dashed #d1d5db",borderRadius:8,padding:"8px 14px",fontSize:12,color:"#94a3b8"}}>Special departures can override any tier</div>
-              </div>
-            </Card>
-          </div>
-        )}
-
-        {view==="tourDetail"&&currentTour&&<TourDetail tour={currentTour} customers={customers} tours={tours} onBack={()=>{setV("dashboard");setSTr(null);}} onEditTour={()=>{setET(currentTour);setV("tourForm");}} onAdd={()=>{setEC({...EC,tourCode:currentTour.tourCode});setV("customerForm");}} onEditCust={c=>{setEC(c);setV("customerForm");}}/>}
-
-        {view==="tourForm"&&<Modal title={editTour?"Edit Tour":"New Tour"} onClose={()=>setV(selTour?"tourDetail":"dashboard")}><TourForm initial={editTour||{}} onSave={saveTour} onCancel={()=>setV(selTour?"tourDetail":"dashboard")} saving={saving}/></Modal>}
-        {view==="customerForm"&&<Modal title={editCust?.id?"Edit Customer":"Add Customer"} onClose={()=>setV("tourDetail")} wide><CustomerForm initial={editCust||{}} tours={tours} customers={customers} onSave={saveCust} onCancel={()=>setV("tourDetail")} saving={saving}/></Modal>}
-        {showCS&&<Modal title="🔍 Customer Search — All Tours" onClose={()=>setSCS(false)} wide><CustomerSearch customers={customers} tours={tours} onEdit={c=>{setEC(c);const t=tours.find(x=>x.tourCode===c.tourCode);setSTr(t||null);setSCS(false);setV("customerForm");}}/></Modal>}
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-</script>
-</body>
-</html>
+      const newT=idx>=0?[.
