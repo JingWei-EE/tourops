@@ -7,12 +7,119 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:#f1f5f9}
-  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1e293b}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#f1f5f9}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+
+/* LAYOUT */
+.layout{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:230px;min-width:200px;background:#0f172a;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;padding-bottom:24px}
+.sidebar-logo{padding:22px 18px 12px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px}
+.sidebar-logo h1{color:#f1f5f9;font-size:16px;font-weight:900;line-height:1.2}
+.sidebar-logo p{color:#64748b;font-size:10px;margin-top:2px}
+.logo-icon{font-size:26px;line-height:1}
+.sidebar-nav{padding:10px 8px;flex:1}
+.sidebar-section{color:#475569;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:14px 10px 5px;margin-top:4px}
+.side-btn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;border:none;background:transparent;cursor:pointer;color:#94a3b8;text-align:left;font-size:12px;font-weight:600;transition:background .15s,color .15s;position:relative}
+.side-btn:hover{background:#1e293b;color:#e2e8f0}
+.side-btn.active{background:#1d4ed8;color:#fff}
+.side-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.side-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.side-badge{font-size:10px;font-weight:800;padding:2px 6px;border-radius:99px;margin-left:auto}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:12px 24px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.topbar-title{font-size:18px;font-weight:900;color:#0f172a;text-transform:capitalize}
+.topbar-sub{font-size:12px;color:#64748b;margin-top:2px;font-weight:600}
+.content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* CARDS */
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.04);animation:fadeIn .2s ease}
+.grid{display:flex;flex-direction:column;gap:12px}
+.stat-box{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;cursor:default;transition:box-shadow .15s}
+.stat-box:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.stat-label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.stat-value{font-size:26px;font-weight:900;color:#1e293b;line-height:1.1}
+.stat-sub{font-size:11px;color:#94a3b8;margin-top:4px}
+
+/* SECTION TITLE */
+.section-title{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f1f5f9}
+.section-title .icon{font-size:18px}
+.section-title span:nth-child(2){font-size:14px;font-weight:900;color:#1e293b;flex:1;letter-spacing:-.01em}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#475569;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1;color:#1e293b}
+.btn.primary{background:#2563eb;border-color:#2563eb;color:#fff}
+.btn.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn.danger{background:#fff;border-color:#fca5a5;color:#dc2626}
+.btn.danger:hover{background:#fee2e2}
+.btn.green{background:#16a34a;border-color:#16a34a;color:#fff}
+.btn.green:hover{background:#15803d}
+.btn.ghost{background:transparent;border-color:transparent;color:#64748b;padding:6px 10px}
+.btn.ghost:hover{background:#f1f5f9;color:#1e293b}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.lg{padding:12px 24px;font-size:15px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* FORMS */
+.field-wrap{display:flex;flex-direction:column;gap:4px}
+.field-wrap label{font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.05em}
+.field-wrap input,.field-wrap select,.field-wrap textarea{padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;color:#1e293b;background:#fff;transition:border-color .15s,box-shadow .15s;width:100%}
+.field-wrap input:focus,.field-wrap select:focus,.field-wrap textarea:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.field-wrap textarea{min-height:72px;resize:vertical}
+.field-hint{font-size:11px;color:#94a3b8;margin-top:2px;line-height:1.4}
+
+/* TABS */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px;background:#f8fafc;border-radius:10px;margin-bottom:4px}
+.tab{padding:7px 14px;border-radius:7px;border:1.5px solid transparent;background:transparent;color:#64748b;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit}
+.tab:hover{background:#e2e8f0;color:#1e293b}
+.tab.active{background:#fff;border-color:#e2e8f0;color:#2563eb;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:99px;font-size:11px;font-weight:800;letter-spacing:.02em}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid #e2e8f0}
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{background:#f8fafc;padding:9px 11px;text-align:left;font-size:10px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:.06em;border-bottom:2px solid #e2e8f0;white-space:nowrap;position:sticky;top:0;z-index:1}
+.table td{padding:8px 11px;border-bottom:1px solid #f1f5f9;vertical-align:middle;line-height:1.35}
+.table tr:last-child td{border-bottom:none}
+.table tr:hover td{background:#f8fafc}
+.table input{padding:5px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;width:100%;min-width:60px}
+.table select{padding:5px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px}
+.table textarea{padding:5px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:12px;min-height:40px;resize:vertical}
+
+/* NOTICES */
+.notice{padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.5;border-left:4px solid transparent}
+.notice.info{background:#eff6ff;border-color:#3b82f6;color:#1e40af}
+.notice.warn{background:#fffbeb;border-color:#f59e0b;color:#92400e}
+.notice.success{background:#f0fdf4;border-color:#22c55e;color:#166534}
+.notice.danger{background:#fff1f2;border-color:#ef4444;color:#9f1239}
+
+/* MODAL */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px)}
+.modal{background:#fff;border-radius:16px;width:100%;max-width:820px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:fadeIn .2s ease}
+.modal-head{padding:18px 22px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-body{overflow-y:auto;padding:20px 22px;flex:1}
+
+/* MISC */
+.empty-state{text-align:center;padding:32px;color:#94a3b8;font-size:14px;font-weight:600}
+.pending-item{font-size:10px;color:#dc2626;font-weight:700;background:#fff1f2;padding:2px 6px;border-radius:4px;margin-bottom:2px;white-space:nowrap}
+.flight-line{font-size:12px;padding:6px 10px;background:#f0f9ff;border-radius:6px;margin-bottom:4px;font-weight:600;color:#1e40af}
+.progress-bar{height:10px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#22c55e);border-radius:99px;transition:width .5s ease}
+.sideBtn{width:100%;text-align:left;padding:8px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;margin-bottom:4px;transition:background .1s}
+.sideBtn:hover{background:#eff6ff}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#94a3b8;flex-shrink:0}
+.sync-dot.loading{background:#f59e0b;animation:spin 1s linear infinite}
+.sync-dot.saved{background:#22c55e}
+.sync-dot.saving{background:#3b82f6;animation:spin 1s linear infinite}
+.sync-dot.error{background:#ef4444}
+@media print{.no-print{display:none!important}.content{padding:0}.card{box-shadow:none;border:1px solid #ccc}}
 </style>
 </head>
 <body>
@@ -46,7 +153,7 @@ const AIRPORT_CITY={KUL:"Kuala Lumpur",SIN:"Singapore",BKK:"Bangkok",DOH:"Doha",
 const AIRPORTS=Object.entries(AIRPORT_CITY).map(([k,v])=>`${k} - ${v}`);
 const DEFAULT_SPECIAL_TIERS=[{range:"First 10 Pax",min:"1",max:"10",amount:"1000"},{range:"11 – 20 Pax",min:"11",max:"20",amount:"700"},{range:"21 – 30 Pax",min:"21",max:"30",amount:"500"}];
 
-const TOUR_COLS=["id","tourCode","tourName","duration","airline","internationalAirline","domesticAirline","tourManager","departureDate","arrivalDate","status","normalPrice","singleSupplement","mealIncluded","mealExcluded","specialDiscount","isSpecialDiscount","specialDiscountTiersJson","flightRaw","flightRowsJson","domesticFlightsJson","flightPNR","groupSeats","noIntlDeductAmount","dateChangeNote","cancelUpdateNote","itineraryUpdateNote","depFlight1Code","depFlight1Date","depFlight1From","depFlight1To","depFlight1Depart","depFlight1Arrive","depFlight2Code","depFlight2Date","depFlight2From","depFlight2To","depFlight2Depart","depFlight2Arrive","arrFlight1Code","arrFlight1Date","arrFlight1From","arrFlight1To","arrFlight1Depart","arrFlight1Arrive","arrFlight2Code","arrFlight2Date","arrFlight2From","arrFlight2To","arrFlight2Depart","arrFlight2Arrive","domFlight1Code","domFlight1Date","domFlight1From","domFlight1To","domFlight1Depart","domFlight1Arrive","domFlight2Code","domFlight2Date","domFlight2From","domFlight2To","domFlight2Depart","domFlight2Arrive"];
+const TOUR_COLS=["id","tourCode","tourName","duration","airline","internationalAirline","domesticAirline","tourManager","departureDate","arrivalDate","status","normalPrice","singleSupplement","mealIncluded","mealExcluded","specialDiscount","isSpecialDiscount","specialDiscountTiersJson","flightRaw","flightRowsJson","domesticFlightsJson","flightPNR","groupPNR","groupSeats","noIntlDeductAmount","dateChangeNote","cancelUpdateNote","itineraryUpdateNote","depFlight1Code","depFlight1Date","depFlight1From","depFlight1To","depFlight1Depart","depFlight1Arrive","depFlight2Code","depFlight2Date","depFlight2From","depFlight2To","depFlight2Depart","depFlight2Arrive","arrFlight1Code","arrFlight1Date","arrFlight1From","arrFlight1To","arrFlight1Depart","arrFlight1Arrive","arrFlight2Code","arrFlight2Date","arrFlight2From","arrFlight2To","arrFlight2Depart","arrFlight2Arrive","domFlight1Code","domFlight1Date","domFlight1From","domFlight1To","domFlight1Depart","domFlight1Arrive","domFlight2Code","domFlight2Date","domFlight2From","domFlight2To","domFlight2Depart","domFlight2Arrive"];
 const CUST_COLS=["id","tourCode","title","surname","name","contact","email","address","bookingSource","bookingType","groupName","roomType","roomPartner","roomGroup","mealRestriction","mealOther","flightHotelExtension","upgradeAmount","groundTourOnly","noIntlFlight","noDomesticFlight","differentPNR","anotherPNR","airlineMemberNo","flight1Seat","flight2Seat","flight3Seat","flight4Seat","domesticSeat1","domesticSeat2","voucherJson","cashVoucherUsed","travelCreditUsed","payment1","payment1Method","payment2","payment2Method","payment3","payment3Method","dob","passportNo","nationality","passportIssue","passportExpiry","passportDriveUrl","emergencyContact","emergencyPhone","visaStatus","insurancePolicyNo","insuranceAmount","specialNeeds","notes","isRegular","status","cancelReason","cancelRefundAmount","cancelVoucherAmount","cancelCarryForward","cancelRefundDone","cancelVoucherIssued","transferFromTour","transferToTour","transferToPerson","cancelBankName","cancelBankAccountName","cancelBankAccountNo","cancelBankSwift","informedDateChange","informedDateChangeDate","informedCancellation","informedCancellationDate"];
 const TASK_COLS=["id","tourCode","customerId","title","category","status","dueDate","notes","createdAt","updatedAt"];
 const VOUCHER_COLS=["id","voucherName","voucherType","amount","period","rule","validityDays","campaignName","entitledByName","expiryDate","isActive","usedByName","usedByTourCode","usedDate","terms","notes"];
@@ -60,7 +167,7 @@ const DEFAULT_VOUCHERS=[
   {id:"v_early_bird",voucherName:"Early Bird Discount",voucherType:"Early Bird Discount",amount:"",period:"Campaign period",rule:"Input according to campaign",validityDays:"",campaignName:"",entitledByName:"",expiryDate:"",isActive:"TRUE",usedByName:"",usedByTourCode:"",usedDate:"",terms:"Subject to campaign T&C",notes:"Add campaign details when needed"}
 ];
 
-const ET={id:"",tourCode:"",tourName:"",duration:"",airline:"",internationalAirline:"",domesticAirline:"",tourManager:"",departureDate:"",arrivalDate:"",status:"Pending",normalPrice:"",singleSupplement:"",mealIncluded:"",mealExcluded:"",specialDiscount:"",isSpecialDiscount:false,specialDiscountTiersJson:"",flightRaw:"",flightRowsJson:"[]",domesticFlightsJson:"[]",flightPNR:"",groupSeats:"",noIntlDeductAmount:"",dateChangeNote:"",cancelUpdateNote:"",itineraryUpdateNote:""}; TOUR_COLS.forEach(k=>{if(!(k in ET))ET[k]=""});
+const ET={id:"",tourCode:"",tourName:"",duration:"",airline:"",internationalAirline:"",domesticAirline:"",tourManager:"",departureDate:"",arrivalDate:"",status:"Pending",normalPrice:"",singleSupplement:"",mealIncluded:"",mealExcluded:"",specialDiscount:"",isSpecialDiscount:false,specialDiscountTiersJson:"",flightRaw:"",flightRowsJson:"[]",domesticFlightsJson:"[]",flightPNR:"",groupPNR:"",groupSeats:"",noIntlDeductAmount:"",dateChangeNote:"",cancelUpdateNote:"",itineraryUpdateNote:""}; TOUR_COLS.forEach(k=>{if(!(k in ET))ET[k]=""});
 const EC={id:"",tourCode:"",title:"Mr",surname:"",name:"",contact:"",email:"",address:"",bookingSource:"Walk-in",bookingType:"Individual",groupName:"",roomType:"Twin",roomPartner:"",roomGroup:"",mealRestriction:"None",mealOther:"",flightHotelExtension:"",upgradeAmount:"",groundTourOnly:false,noIntlFlight:false,noDomesticFlight:false,differentPNR:false,anotherPNR:"",airlineMemberNo:"",flight1Seat:"",flight2Seat:"",flight3Seat:"",flight4Seat:"",domesticSeat1:"",domesticSeat2:"",voucherJson:"[]",cashVoucherUsed:"",travelCreditUsed:"",payment1:"",payment1Method:"Bank Transfer",payment2:"",payment2Method:"Bank Transfer",payment3:"",payment3Method:"Bank Transfer",dob:"",passportNo:"",nationality:"Malaysian",passportIssue:"",passportExpiry:"",passportDriveUrl:"",emergencyContact:"",emergencyPhone:"",visaStatus:"Not Required",insurancePolicyNo:"",insuranceAmount:"",specialNeeds:"",notes:"",isRegular:false,status:"Active",cancelReason:"",cancelRefundAmount:"",cancelVoucherAmount:"",cancelCarryForward:"",cancelRefundDone:false,cancelVoucherIssued:false,transferFromTour:"",transferToTour:"",transferToPerson:"",cancelBankName:"",cancelBankAccountName:"",cancelBankAccountNo:"",cancelBankSwift:"",informedDateChange:false,informedDateChangeDate:"",informedCancellation:false,informedCancellationDate:""};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -124,26 +231,26 @@ function Field({label,value,onChange,type="text",options,placeholder,style,hint,
 function Check({label,checked,onChange}){return h("label",{style:{display:"flex",alignItems:"center",gap:8,fontSize:13,color:"#334155",cursor:"pointer",textTransform:"none",letterSpacing:0,fontWeight:600}},h("input",{type:"checkbox",checked:!!boolify(checked),onChange:e=>onChange(e.target.checked),style:{width:15,height:15,accentColor:"#2563eb"}}),label)}
 function Btn(p){return h("button",{className:"btn "+(p.variant||"")+" "+(p.size||""),onClick:p.onClick,disabled:p.disabled,style:p.style,title:p.title},p.children)}
 function Card(p){return h("div",{className:"card",style:p.style},p.children)}
-function Grid({n,children,gap}){return h("div",{className:"grid",style:{gridTemplateColumns:`repeat(${n},minmax(0,1fr))`,gap:gap||12}},children)}
+function Grid({n,children,gap}){return h("div",{style:{display:"grid",gridTemplateColumns:`repeat(${n},minmax(0,1fr))`,gap:gap||12}},children)}
 function Badge({status}){const m={Pending:["#e2e8f0","#475569"],Confirmed:["#dbeafe","#1d4ed8"],Departed:["#fef3c7","#92400e"],Completed:["#dcfce7","#166534"],Cancelled:["#fee2e2","#dc2626"],Active:["#dcfce7","#166534"],Transferred:["#f3e8ff","#7e22ce"],Done:["#dcfce7","#166534"]};const [bg,col]=m[status]||["#e2e8f0","#475569"];return h("span",{className:"badge",style:{background:bg,color:col}},status)}
 function Section({icon,title,right}){return h("div",{className:"section-title"},icon&&h("span",{className:"icon"},icon),h("span",{style:{flex:1}},title),right)}
 function StatBox({label,value,sub,color,icon,onClick}){return h("div",{className:"stat-box",style:{background:color?.bg||"#fff",cursor:onClick?"pointer":undefined},onClick},h("div",{className:"stat-label",style:{color:color?.col}},icon&&h("span",{style:{marginRight:4}},icon),label),h("div",{className:"stat-value",style:{color:color?.col||"#1e293b"}},value),sub&&h("div",{className:"stat-sub"},sub))}
 function Modal({title,onClose,children}){return h("div",{className:"modal-back"},h("div",{className:"modal"},h("div",{className:"modal-head"},h("div",{style:{fontWeight:800,fontSize:16}},title),h("button",{className:"btn ghost",onClick:onClose,style:{fontSize:24,lineHeight:1,padding:"4px 8px"}},"×")),h("div",{className:"modal-body"},children)))}
 function FlightLine({r}){return h("div",{className:"flight-line"},`${r.flightCode||r.code||"—"} ${flightDateLabel(r.date)} ${airportCity(r.from)} → ${airportCity(r.to)} ${r.departTime||r.depart||""} ${r.arrivalTime||r.arrive||""}${r.plus1?" (+1)":""}`)}
-function FlightPanel({tour,customers}){const rows=safeJson(tour.flightRowsJson,[]);const dom=safeJson(tour.domesticFlightsJson,[]);const used=groupSeatUsed(customers,tour.tourCode),total=Number(tour.groupSeats||0);return h(Card,{style:{background:"#f0f9ff",borderColor:"#bae6fd",padding:16}},h(Section,{icon:"✈️",title:"Flight Details",right:h("span",{className:"badge",style:{background:"#dbeafe",color:"#1d4ed8"}},`Seats ${used}/${total||"—"}`)}),h("div",{style:{fontSize:12,fontWeight:800,color:"#1e40af",marginBottom:8}},`PNR: ${tour.flightPNR||"—"} · International Airline: ${tour.internationalAirline||tour.airline||"—"}`),rows.length?h("div",{className:"table-wrap",style:{marginBottom:10}},h("table",{className:"table"},h("thead",null,h("tr",null,["Flight Code","Date","Depart City","Arrival/Transit City","Depart Time","Arrival Time"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i},h("td",null,r.flightCode),h("td",null,r.date),h("td",null,r.fromCity||airportCity(r.from)),h("td",null,r.toCity||airportCity(r.to)),h("td",null,r.departTime),h("td",null,(r.arrivalTime||"")+(r.plus1?" (+1)":""))))))):h("div",{className:"notice info"},"No pasted international flight schedule yet."),h(Section,{icon:"🛩️",title:"Domestic Flight Schedule"}),dom.length?h("div",null,dom.map((r,i)=>h(FlightLine,{key:i,r}))):h("div",{className:"field-hint"},"Domestic flight is optional."))}
+function FlightPanel({tour,customers}){const rows=safeJson(tour.flightRowsJson,[]);const dom=safeJson(tour.domesticFlightsJson,[]);const used=groupSeatUsed(customers,tour.tourCode),total=Number(tour.groupSeats||0);return h(Card,{style:{background:"#f0f9ff",borderColor:"#bae6fd",padding:16}},h(Section,{icon:"✈️",title:"Flight Details",right:h("span",{className:"badge",style:{background:"#dbeafe",color:"#1d4ed8"}},`Seats ${used}/${total||"—"}`)}),h("div",{style:{fontSize:12,fontWeight:800,color:"#1e40af",marginBottom:8}},h("div",{style:{display:"flex",gap:16,flexWrap:"wrap",alignItems:"center"}},h("span",null,h("b",null,"Flight PNR: "),tour.flightPNR||"—",tour.flightPNR&&h("button",{onClick:()=>navigator.clipboard.writeText(tour.flightPNR).then(()=>{}),title:"Copy PNR",style:{marginLeft:6,padding:"2px 6px",fontSize:10,cursor:"pointer",borderRadius:4,border:"1px solid #bae6fd",background:"#e0f2fe",color:"#0369a1"}},"Copy")),h("span",null,h("b",null,"Group PNR: "),tour.groupPNR||"—",tour.groupPNR&&h("button",{onClick:()=>navigator.clipboard.writeText(tour.groupPNR).then(()=>{}),title:"Copy Group PNR",style:{marginLeft:6,padding:"2px 6px",fontSize:10,cursor:"pointer",borderRadius:4,border:"1px solid #bae6fd",background:"#e0f2fe",color:"#0369a1"}},"Copy")),h("span",null,h("b",null,"Airline: "),tour.internationalAirline||tour.airline||"—"))),rows.length?h("div",{className:"table-wrap",style:{marginBottom:10}},h("table",{className:"table"},h("thead",null,h("tr",null,["Flight Code","Date","Depart City","Arrival/Transit City","Depart Time","Arrival Time"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i},h("td",null,r.flightCode),h("td",null,r.date),h("td",null,r.fromCity||airportCity(r.from)),h("td",null,r.toCity||airportCity(r.to)),h("td",null,r.departTime),h("td",null,(r.arrivalTime||"")+(r.plus1?" (+1)":""))))))):h("div",{className:"notice info"},"No pasted international flight schedule yet."),h(Section,{icon:"🛩️",title:"Domestic Flight Schedule"}),dom.length?h("div",null,dom.map((r,i)=>h(FlightLine,{key:i,r}))):h("div",{className:"field-hint"},"Domestic flight is optional."))}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FORMS
 // ─────────────────────────────────────────────────────────────────────────────
-function TourForm({initial,onSave,onCancel,saving,customers}){const [t,setT]=useState({...ET,...initial});const [tiers,setTiers]=useState(parseSpecialTiers({...ET,...initial}));const [dom,setDom]=useState(safeJson(initial?.domesticFlightsJson,[]));const u=(k,v)=>setT(o=>({...o,[k]:v}));const pax=activePax(customers,t.tourCode);const dn=calcDN(t.departureDate,t.arrivalDate);const parsed=safeJson(t.flightRowsJson,[]);function pasteFlights(v){const year=t.departureDate?new Date(t.departureDate).getFullYear():new Date().getFullYear();const rows=parseFlightText(v,year);setT(applyParsedFlights({...t,flightRaw:v},rows))}function updTier(i,k,v){const a=[...tiers];a[i]={...a[i],[k]:v};setTiers(a)}function addDom(){setDom([...dom,{flightCode:"",date:"",from:"",to:"",departTime:"",arrivalTime:""}])}function updDom(i,k,v){const a=[...dom];a[i]={...a[i],[k]:v};setDom(a)}function save(){if(!t.tourCode||!t.tourName)return alert("Tour Code and Tour Name required.");onSave({...t,id:t.id||"tour_"+Date.now(),duration:dn.days?`${dn.days}D/${dn.nights}N`:t.duration,specialDiscountTiersJson:JSON.stringify(tiers),domesticFlightsJson:JSON.stringify(dom),status:(!boolify(t.isSpecialDiscount)&&pax>=18&&!['Cancelled','Departed','Completed'].includes(t.status))?'Confirmed':t.status})}return h("div",{className:"grid"},h(Section,{icon:"📋",title:"Basic Information"}),h(Grid,{n:3},h(Field,{label:"Tour Code",value:t.tourCode,onChange:v=>u("tourCode",v.toUpperCase()),required:true}),h("div",{style:{gridColumn:"span 2"}},h(Field,{label:"Tour Name",value:t.tourName,onChange:v=>u("tourName",v),required:true}))),h(Grid,{n:4},h(Field,{label:"Duration",value:dn.days?`${dn.days}D / ${dn.nights}N`:t.duration,onChange:v=>u("duration",v),disabled:true}),h(Field,{label:"Fly Out Date (Auto)",type:"date",value:t.departureDate,onChange:v=>u("departureDate",v)}),h(Field,{label:"Home Arrival Date (Auto)",type:"date",value:t.arrivalDate,onChange:v=>u("arrivalDate",v)}),h(Field,{label:"Status",value:t.status,onChange:v=>u("status",v),options:TOUR_STATUSES})),h(Grid,{n:4},h(Field,{label:"International Airline (Auto)",value:t.internationalAirline||t.airline,onChange:v=>{u("internationalAirline",v);u("airline",v)}}),h(Field,{label:"Domestic Airline (Auto, if applicable)",value:t.domesticAirline,onChange:v=>u("domesticAirline",v)}),h(Field,{label:"Tour Manager",value:t.tourManager,onChange:v=>u("tourManager",v)}),h(Field,{label:"Group Seat (Number)",type:"number",value:t.groupSeats,onChange:v=>u("groupSeats",v)})),h(Grid,{n:4},h(Field,{label:"Normal Price",type:"number",value:t.normalPrice,onChange:v=>u("normalPrice",v)}),h(Field,{label:"Single Supplement",type:"number",value:t.singleSupplement,onChange:v=>u("singleSupplement",v)}),h(Field,{label:"Meal Included",type:"number",value:t.mealIncluded,onChange:v=>u("mealIncluded",v)}),h(Field,{label:"Meal Excluded",type:"number",value:t.mealExcluded,onChange:v=>u("mealExcluded",v)})),h(Field,{label:"Flight Details — paste schedule",type:"textarea",value:t.flightRaw,onChange:pasteFlights,placeholder:"TK61 24APR KUL IST 2325 0520\nTK1021 25APR IST SJJ 0705 0800\nTK1870 05MAY VCE IST 1955 2330\nTK60 06MAY IST KUL 0140 1705",hint:"System auto-detects fly-out date, home arrival date, airline, airport cities and +1 arrival."}),parsed.length>0&&h(FlightPanel,{tour:t,customers}),h(Section,{icon:"🛩️",title:"Domestic Flight Schedule"}),h("div",{className:"notice info"},"Domestic flights are optional. Add rows only when needed."),dom.map((r,i)=>h(Card,{key:i,style:{padding:12,background:"#f8fafc"}},h(Grid,{n:6},h(Field,{label:"Flight Code",value:r.flightCode,onChange:v=>updDom(i,"flightCode",v.toUpperCase())}),h(Field,{label:"Date",type:"date",value:r.date,onChange:v=>updDom(i,"date",v)}),h(Field,{label:"Depart City",value:r.from,onChange:v=>updDom(i,"from",v),options:AIRPORTS}),h(Field,{label:"Arrival City",value:r.to,onChange:v=>updDom(i,"to",v),options:AIRPORTS}),h(Field,{label:"Time 0000 0000",value:[r.departTime||"",r.arrivalTime||""].join(" ").trim(),onChange:v=>{const p=String(v).replace(/[^0-9 ]/g,"").trim().split(/\s+/);updDom(i,"departTime",(p[0]||"").slice(0,4));updDom(i,"arrivalTime",(p[1]||"").slice(0,4))},placeholder:"0835 1255"}),h(Btn,{variant:"danger",style:{marginTop:17},onClick:()=>setDom(dom.filter((_,j)=>j!==i))},"Remove")))),h("div",null,h(Btn,{onClick:addDom},"+ Add Domestic Flight")),h(Section,{icon:"💸",title:"Special Discount"}),h(Check,{label:"This tour has a Special Discount Promotion",checked:t.isSpecialDiscount,onChange:v=>u("isSpecialDiscount",v)}),boolify(t.isSpecialDiscount)&&h(Card,{style:{background:"#fff7ed",borderColor:"#fed7aa"}},h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Pax Range","From","To","Amount of Discount","Final Price"].map(x=>h("th",{key:x},x)))),h("tbody",null,tiers.map((r,i)=>h("tr",{key:i},h("td",null,h("input",{value:r.range||"",onChange:e=>updTier(i,"range",e.target.value)})),h("td",null,h("input",{type:"number",value:r.min||"",onChange:e=>updTier(i,"min",e.target.value)})),h("td",null,h("input",{type:"number",value:r.max||"",onChange:e=>updTier(i,"max",e.target.value)})),h("td",null,h("input",{type:"number",value:r.amount||"",onChange:e=>updTier(i,"amount",e.target.value)})),h("td",{style:{fontWeight:900,color:"#166534"}},fmt(Number(t.normalPrice||0)-Number(r.amount||0)))))))),h("div",{style:{marginTop:10}},h(Btn,{onClick:()=>setTiers([...tiers,{range:"",min:"",max:"",amount:""}])},"+ Add Tier"))),h(Grid,{n:2},h(Field,{label:"Date Change Note",type:"textarea",value:t.dateChangeNote,onChange:v=>u("dateChangeNote",v)}),h(Field,{label:"Cancellation / Itinerary Update Note",type:"textarea",value:t.cancelUpdateNote,onChange:v=>u("cancelUpdateNote",v)})),h("div",{style:{display:"flex",justifyContent:"flex-end",gap:8}},h(Btn,{onClick:onCancel},"Cancel"),h(Btn,{variant:"primary",disabled:saving,onClick:save},saving?"Saving…":"Save Tour")))}
+function TourForm({initial,onSave,onCancel,saving,customers}){const [t,setT]=useState({...ET,...initial});const [tiers,setTiers]=useState(parseSpecialTiers({...ET,...initial}));const [dom,setDom]=useState(safeJson(initial?.domesticFlightsJson,[]));const u=(k,v)=>setT(o=>({...o,[k]:v}));const pax=activePax(customers,t.tourCode);const dn=calcDN(t.departureDate,t.arrivalDate);const parsed=safeJson(t.flightRowsJson,[]);function pasteFlights(v){const year=t.departureDate?new Date(t.departureDate).getFullYear():new Date().getFullYear();const rows=parseFlightText(v,year);setT(applyParsedFlights({...t,flightRaw:v},rows))}function updTier(i,k,v){const a=[...tiers];a[i]={...a[i],[k]:v};setTiers(a)}function addDom(){setDom([...dom,{flightCode:"",date:"",from:"",to:"",departTime:"",arrivalTime:""}])}function updDom(i,k,v){const a=[...dom];a[i]={...a[i],[k]:v};setDom(a)}function save(){if(!t.tourCode||!t.tourName)return alert("Tour Code and Tour Name required.");onSave({...t,id:t.id||"tour_"+Date.now(),duration:dn.days?`${dn.days}D/${dn.nights}N`:t.duration,specialDiscountTiersJson:JSON.stringify(tiers),domesticFlightsJson:JSON.stringify(dom),status:(!boolify(t.isSpecialDiscount)&&pax>=18&&!['Cancelled','Departed','Completed'].includes(t.status))?'Confirmed':t.status})}return h("div",{className:"grid"},h(Section,{icon:"📋",title:"Basic Information"}),h(Grid,{n:3},h(Field,{label:"Tour Code",value:t.tourCode,onChange:v=>u("tourCode",v.toUpperCase()),required:true}),h("div",{style:{gridColumn:"span 2"}},h(Field,{label:"Tour Name",value:t.tourName,onChange:v=>u("tourName",v),required:true}))),h(Grid,{n:4},h(Field,{label:"Duration",value:dn.days?`${dn.days}D / ${dn.nights}N`:t.duration,onChange:v=>u("duration",v),disabled:true}),h(Field,{label:"Fly Out Date (Auto)",type:"date",value:t.departureDate,onChange:v=>u("departureDate",v)}),h(Field,{label:"Home Arrival Date (Auto)",type:"date",value:t.arrivalDate,onChange:v=>u("arrivalDate",v)}),h(Field,{label:"Status",value:t.status,onChange:v=>u("status",v),options:TOUR_STATUSES})),h(Grid,{n:4},h(Field,{label:"International Airline (Auto)",value:t.internationalAirline||t.airline,onChange:v=>{u("internationalAirline",v);u("airline",v)}}),h(Field,{label:"Domestic Airline (Auto, if applicable)",value:t.domesticAirline,onChange:v=>u("domesticAirline",v)}),h(Field,{label:"Tour Manager",value:t.tourManager,onChange:v=>u("tourManager",v)}),h(Field,{label:"Group PNR",value:t.groupPNR,onChange:v=>u("groupPNR",v),placeholder:"e.g. XKZP4M"}),h(Field,{label:"Group Seat (Number)",type:"number",value:t.groupSeats,onChange:v=>u("groupSeats",v)})),h(Grid,{n:4},h(Field,{label:"Normal Price",type:"number",value:t.normalPrice,onChange:v=>u("normalPrice",v)}),h(Field,{label:"Single Supplement",type:"number",value:t.singleSupplement,onChange:v=>u("singleSupplement",v)}),h(Field,{label:"Meal Included",type:"number",value:t.mealIncluded,onChange:v=>u("mealIncluded",v)}),h(Field,{label:"Meal Excluded",type:"number",value:t.mealExcluded,onChange:v=>u("mealExcluded",v)})),h(Field,{label:"Flight Details — paste schedule",type:"textarea",value:t.flightRaw,onChange:pasteFlights,placeholder:"TK61 24APR KUL IST 2325 0520\nTK1021 25APR IST SJJ 0705 0800\nTK1870 05MAY VCE IST 1955 2330\nTK60 06MAY IST KUL 0140 1705",hint:"System auto-detects fly-out date, home arrival date, airline, airport cities and +1 arrival."}),parsed.length>0&&h(FlightPanel,{tour:t,customers}),h(Section,{icon:"🛩️",title:"Domestic Flight Schedule"}),h("div",{className:"notice info"},"Domestic flights are optional. Add rows only when needed."),dom.map((r,i)=>h(Card,{key:i,style:{padding:12,background:"#f8fafc"}},h(Grid,{n:6},h(Field,{label:"Flight Code",value:r.flightCode,onChange:v=>updDom(i,"flightCode",v.toUpperCase())}),h(Field,{label:"Date",type:"date",value:r.date,onChange:v=>updDom(i,"date",v)}),h(Field,{label:"Depart City",value:r.from,onChange:v=>updDom(i,"from",v),options:AIRPORTS}),h(Field,{label:"Arrival City",value:r.to,onChange:v=>updDom(i,"to",v),options:AIRPORTS}),h(Field,{label:"Time 0000 0000",value:[r.departTime||"",r.arrivalTime||""].join(" ").trim(),onChange:v=>{const p=String(v).replace(/[^0-9 ]/g,"").trim().split(/\s+/);updDom(i,"departTime",(p[0]||"").slice(0,4));updDom(i,"arrivalTime",(p[1]||"").slice(0,4))},placeholder:"0835 1255"}),h(Btn,{variant:"danger",style:{marginTop:17},onClick:()=>setDom(dom.filter((_,j)=>j!==i))},"Remove")))),h("div",null,h(Btn,{onClick:addDom},"+ Add Domestic Flight")),h(Section,{icon:"💸",title:"Special Discount"}),h(Check,{label:"This tour has a Special Discount Promotion",checked:t.isSpecialDiscount,onChange:v=>u("isSpecialDiscount",v)}),boolify(t.isSpecialDiscount)&&h(Card,{style:{background:"#fff7ed",borderColor:"#fed7aa"}},h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Pax Range","From","To","Amount of Discount","Final Price"].map(x=>h("th",{key:x},x)))),h("tbody",null,tiers.map((r,i)=>h("tr",{key:i},h("td",null,h("input",{value:r.range||"",onChange:e=>updTier(i,"range",e.target.value)})),h("td",null,h("input",{type:"number",value:r.min||"",onChange:e=>updTier(i,"min",e.target.value)})),h("td",null,h("input",{type:"number",value:r.max||"",onChange:e=>updTier(i,"max",e.target.value)})),h("td",null,h("input",{type:"number",value:r.amount||"",onChange:e=>updTier(i,"amount",e.target.value)})),h("td",{style:{fontWeight:900,color:"#166534"}},fmt(Number(t.normalPrice||0)-Number(r.amount||0)))))))),h("div",{style:{marginTop:10}},h(Btn,{onClick:()=>setTiers([...tiers,{range:"",min:"",max:"",amount:""}])},"+ Add Tier"))),h(Grid,{n:2},h(Field,{label:"Date Change Note",type:"textarea",value:t.dateChangeNote,onChange:v=>u("dateChangeNote",v)}),h(Field,{label:"Cancellation / Itinerary Update Note",type:"textarea",value:t.cancelUpdateNote,onChange:v=>u("cancelUpdateNote",v)})),h("div",{style:{display:"flex",justifyContent:"flex-end",gap:8}},h(Btn,{onClick:onCancel},"Cancel"),h(Btn,{variant:"primary",disabled:saving,onClick:save},saving?"Saving…":"Save Tour")))}
 function VouchersEditor({c,setC,tour}){const today=new Date().toISOString().slice(0,10);const vs=parseVoucher(c.voucherJson).filter(v=>!v.expiry||v.expiry>=today);const auto=birthdayVoucher(c,tour);const has=auto&&vs.some(v=>v.type==="Birthday Voucher RM500"&&v.validFrom===auto.validFrom);function setVs(a){setC(o=>({...o,voucherJson:JSON.stringify(a)}))}return h("div",{className:"grid"},auto&&h("div",{className:"notice warn"},`🎂 Birthday during this tour. RM500 Birthday Voucher is for NEXT tour only, valid ${auto.validFrom} to ${auto.expiry}.`,!has&&h("div",{style:{marginTop:8}},h(Btn,{onClick:()=>setVs([...vs,{...auto,holderName:fullName(c)}])},"Add Birthday Voucher Holder"))),vs.map((v,i)=>h(Card,{key:i,style:{padding:12,background:"#f8fafc"}},h(Grid,{n:6},h(Field,{label:"Voucher",value:v.type,onChange:x=>{v.type=x;setVs([...vs])},options:HOLDER_VOUCHER_TYPES}),h(Field,{label:"Amount",type:"number",value:v.amount,onChange:x=>{v.amount=x;setVs([...vs])}}),h(Field,{label:"Expiry",type:"date",value:v.expiry,onChange:x=>{v.expiry=x;setVs([...vs])}}),h(Check,{label:"Used",checked:v.used,onChange:x=>{v.used=x;setVs([...vs])}}),h(Field,{label:"Remark",value:v.note,onChange:x=>{v.note=x;setVs([...vs])}}),h(Btn,{variant:"danger",style:{marginTop:17},onClick:()=>setVs(vs.filter((_,j)=>j!==i))},"Remove")))),h(Btn,{onClick:()=>setVs([...vs,{type:"Campaign Discount",amount:"",expiry:"",used:false,note:"",holderName:fullName(c)}])},"+ Add Campaign Voucher Holder"))}
 function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){const [c,setC]=useState({...EC,...initial});const [tab,setTab]=useState("personal");const [lookup,setLookup]=useState("");const u=(k,v)=>setC(o=>({...o,[k]:v}));const tour=tours.find(t=>t.tourCode===c.tourCode)||ET;const f=calcFare(c,tour,customers);const found=lookup?customers.filter(x=>x.id!==c.id&&(fullName(x).includes(lookup.toUpperCase())||String(x.contact||"").includes(lookup)||String(x.passportNo||"").toUpperCase().includes(lookup.toUpperCase()))).slice(0,5):[];function useExisting(x){setC(o=>({...o,title:x.title,surname:x.surname,name:x.name,contact:x.contact,email:x.email,address:x.address,passportNo:x.passportNo,nationality:x.nationality,passportIssue:x.passportIssue,passportExpiry:x.passportExpiry,airlineMemberNo:x.airlineMemberNo,mealRestriction:x.mealRestriction,mealOther:x.mealOther}));setLookup("")}function save(){if(!c.tourCode||!c.surname||!c.name)return alert("Tour Code, surname and name required");onSave({...c,id:c.id||"cust_"+Date.now(),surname:String(c.surname||"").toUpperCase(),name:String(c.name||"").toUpperCase()})}const tabs=["personal","group","meal","price","payment","passport","flight","status"];return h("div",{className:"grid"},h("div",{className:"tabs"},tabs.map(x=>h("button",{key:x,className:"tab "+(tab===x?"active":""),onClick:()=>setTab(x)},x))),tab==="personal"&&h("div",{className:"grid"},h(Card,{style:{background:"#f8fafc",padding:12}},h("b",null,"Existing Customer Lookup"),h("input",{placeholder:"Search by name / phone / passport",value:lookup,onChange:e=>setLookup(e.target.value),style:{marginTop:8}}),found.map(x=>h("button",{key:x.id,className:"sideBtn",onClick:()=>useExisting(x)},h("b",null,fullName(x)),h("div",{style:{fontSize:10,color:"#64748b"}},`${x.contact||"—"} · ${x.passportNo||"—"} · ${x.mealRestriction||"—"}`)))),h(Grid,{n:3},h(Field,{label:"Tour Code",value:c.tourCode,onChange:v=>u("tourCode",v),options:tours.map(t=>t.tourCode)}),h(Field,{label:"Booking Source",value:c.bookingSource,onChange:v=>u("bookingSource",v),options:BOOKING_SRC}),h(Field,{label:"Customer Status",value:c.status,onChange:v=>u("status",v),options:CUST_STATUSES})),h(Grid,{n:4},h(Field,{label:"Title",value:c.title,onChange:v=>u("title",v)}),h(Field,{label:"Surname",value:c.surname,onChange:v=>u("surname",v.toUpperCase())}),h(Field,{label:"Given Name",value:c.name,onChange:v=>u("name",v.toUpperCase())}),h(Field,{label:"Phone Number",value:c.contact,onChange:v=>u("contact",v)})),h(Grid,{n:2},h(Field,{label:"Email",value:c.email,onChange:v=>u("email",v)}),h(Field,{label:"Address",value:c.address,onChange:v=>u("address",v)})),h(Field,{label:"Flight & Hotel Extension",value:c.flightHotelExtension,onChange:v=>u("flightHotelExtension",v)})),tab==="group"&&h("div",{className:"grid"},h(Grid,{n:4},h(Field,{label:"Booking Type",value:c.bookingType,onChange:v=>u("bookingType",v),options:BOOKING_TYPES}),h(Field,{label:"Group Name / With Who",value:c.groupName,onChange:v=>u("groupName",v)}),h(Field,{label:"Room Type",value:c.roomType,onChange:v=>u("roomType",v),options:ROOM_TYPES}),h(Field,{label:"Room Group",value:c.roomGroup,onChange:v=>u("roomGroup",v)})),h(Field,{label:"Room Partner",value:c.roomPartner,onChange:v=>u("roomPartner",v),options:customers.filter(x=>x.tourCode===c.tourCode&&x.status==="Active"&&x.id!==c.id).map(fullName)})),tab==="meal"&&h("div",{className:"grid"},h(Grid,{n:2},h(Field,{label:"Meal Restriction",value:c.mealRestriction,onChange:v=>u("mealRestriction",v),options:MEAL_OPTS}),c.mealRestriction==="Other"&&h(Field,{label:"Other Meal Preference",value:c.mealOther,onChange:v=>u("mealOther",v)}))),tab==="price"&&h("div",{className:"grid"},h(Grid,{n:4},h(StatBox,{label:"Normal",value:fmt(f.normal)}),h(StatBox,{label:"Tier Discount",value:"- "+fmt(f.tier)}),h(StatBox,{label:"Voucher",value:"- "+fmt(f.vouchers)}),h(StatBox,{label:"Final Fare",value:fmt(f.fare),color:{bg:"#dcfce7",col:"#166534"}})),h(Grid,{n:4},h(Field,{label:"Upgrade/Add-on",type:"number",value:c.upgradeAmount,onChange:v=>u("upgradeAmount",v)}),h(Field,{label:"Cash Voucher Used",type:"number",value:c.cashVoucherUsed,onChange:v=>u("cashVoucherUsed",v)}),h(Field,{label:"Travel Credit Used",type:"number",value:c.travelCreditUsed,onChange:v=>u("travelCreditUsed",v)}),h(Check,{label:"Not taking international flight",checked:c.noIntlFlight,onChange:v=>u("noIntlFlight",v)})),h(VouchersEditor,{c,setC,tour})),tab==="payment"&&h("div",{className:"grid"},[1,2,3].map(n=>h(Grid,{n:2,key:n},h(Field,{label:`Payment ${n} Amount`,type:"number",value:c["payment"+n],onChange:v=>u("payment"+n,v)}),h(Field,{label:`Payment ${n} Method`,value:c["payment"+n+"Method"],onChange:v=>u("payment"+n+"Method",v),options:PAY_METHODS}))),h(Grid,{n:3},h(StatBox,{label:"Paid",value:fmt(f.paid)}),h(StatBox,{label:"Fare",value:fmt(f.fare)}),h(StatBox,{label:"Balance",value:fmt(Math.abs(f.balance)),color:f.balance>0?{bg:"#fee2e2",col:"#dc2626"}:{bg:"#dcfce7",col:"#166534"}}))),tab==="passport"&&h("div",{className:"grid"},h(Grid,{n:4},h(Field,{label:"DOB",type:"date",value:c.dob,onChange:v=>u("dob",v)}),h("div",null,h("label",null,"Birthday During Tour"),h("div",{style:{padding:8,borderRadius:8,background:birthdayInTour(c.dob,tour.departureDate,tour.arrivalDate)?"#fef3c7":"#f8fafc",fontWeight:800}},birthdayInTour(c.dob,tour.departureDate,tour.arrivalDate)?"YES 🎂":"No")),h(Field,{label:"Nationality",value:c.nationality,onChange:v=>u("nationality",v)}),h(Field,{label:"Passport Number",value:c.passportNo,onChange:v=>u("passportNo",v)})),h(Grid,{n:2},h(Field,{label:"Passport Issue",type:"date",value:c.passportIssue,onChange:v=>u("passportIssue",v)}),h(Field,{label:"Passport Expiry",type:"date",value:c.passportExpiry,onChange:v=>u("passportExpiry",v)})),h(PassportUploadSection,{c,setC,tour,customers})),tab==="flight"&&h("div",{className:"grid"},h(Grid,{n:3},h(Check,{label:"Not taking domestic flight",checked:c.noDomesticFlight,onChange:v=>u("noDomesticFlight",v)}),h(Check,{label:"Different international PNR",checked:c.differentPNR,onChange:v=>u("differentPNR",v)}),h(Field,{label:"Another PNR",value:c.anotherPNR,onChange:v=>u("anotherPNR",v)})),h(Field,{label:"Airline Member Number",value:c.airlineMemberNo,onChange:v=>u("airlineMemberNo",v)}),h(Grid,{n:4},[1,2,3,4].map(n=>h(Field,{key:n,label:`Flight ${n} Seat`,value:c[`flight${n}Seat`],onChange:v=>u(`flight${n}Seat`,v)}))),h(Grid,{n:2},h(Field,{label:"Domestic Seat 1",value:c.domesticSeat1,onChange:v=>u("domesticSeat1",v)}),h(Field,{label:"Domestic Seat 2",value:c.domesticSeat2,onChange:v=>u("domesticSeat2",v)}))),tab==="status"&&h("div",{className:"grid"},h("div",{className:"notice info"},c.status==="Transferred"?"Transferred traveller appears active in the new tour and inactive in original tour.":c.status==="Cancelled"?"Cancelled traveller remains under Cancelled / Transferred Customers.":"Active traveller appears in main customer list."),h(Grid,{n:3},h(Field,{label:"Customer Status",value:c.status,onChange:v=>u("status",v),options:CUST_STATUSES}),h(Field,{label:"Transfer To Tour",value:c.transferToTour,onChange:v=>u("transferToTour",v),options:["",...tours.map(t=>t.tourCode)]}),h(Field,{label:"Transfer To Person",value:c.transferToPerson,onChange:v=>u("transferToPerson",v)})),c.status==="Cancelled"&&h(Card,{style:{background:"#fff7ed",borderColor:"#fed7aa"}},h(Grid,{n:4},h(Field,{label:"Refund Amount",type:"number",value:c.cancelRefundAmount,onChange:v=>u("cancelRefundAmount",v)}),h(Check,{label:"Refund Done",checked:c.cancelRefundDone,onChange:v=>u("cancelRefundDone",v)}),h(Field,{label:"Voucher Amount",type:"number",value:c.cancelVoucherAmount,onChange:v=>u("cancelVoucherAmount",v)}),h(Check,{label:"Voucher Issued",checked:c.cancelVoucherIssued,onChange:v=>u("cancelVoucherIssued",v)})),h(Grid,{n:4},h(Field,{label:"Bank Name",value:c.cancelBankName,onChange:v=>u("cancelBankName",v)}),h(Field,{label:"Account Holder",value:c.cancelBankAccountName,onChange:v=>u("cancelBankAccountName",v.toUpperCase())}),h(Field,{label:"Account No.",value:c.cancelBankAccountNo,onChange:v=>u("cancelBankAccountNo",v)}),h(Field,{label:"SWIFT / Remark",value:c.cancelBankSwift,onChange:v=>u("cancelBankSwift",v)}))),h(Grid,{n:4},h(Check,{label:"Informed on date change",checked:c.informedDateChange,onChange:v=>u("informedDateChange",v)}),h(Field,{label:"Date Change Informed Date",type:"date",value:c.informedDateChangeDate,onChange:v=>u("informedDateChangeDate",v)}),h(Check,{label:"Informed on cancellation",checked:c.informedCancellation,onChange:v=>u("informedCancellation",v)}),h(Field,{label:"Cancellation Informed Date",type:"date",value:c.informedCancellationDate,onChange:v=>u("informedCancellationDate",v)})),h(Field,{label:"Notes",type:"textarea",value:c.notes,onChange:v=>u("notes",v)})),h("div",{style:{display:"flex",justifyContent:"flex-end",gap:8}},h(Btn,{onClick:onCancel},"Cancel"),h(Btn,{variant:"primary",disabled:saving,onClick:save},saving?"Saving…":"Save Customer")))}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LISTS / DASHBOARD / PAGES
 // ─────────────────────────────────────────────────────────────────────────────
-function CustomerTable({tour,customers,onEdit,show="Active",filter}){let rows=show==="Active"?customers.filter(c=>isActiveInTour(c,tour.tourCode)):show==="Inactive"?customers.filter(c=>isInactiveOriginal(c,tour.tourCode)):customers.filter(c=>isActiveInTour(c,tour.tourCode)||isInactiveOriginal(c,tour.tourCode));if(filter){const f=filter.toLowerCase();rows=rows.filter(c=>(fullName(c)+c.contact+c.groupName+c.roomGroup+c.status+c.mealRestriction+c.visaStatus+c.roomPartner).toLowerCase().includes(f))}if(!rows.length)return h("div",{className:"empty-state"},"No customers.");return h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["#","Name","Contact","Birthday","Room","Meal","Visa","Passport","Ext.","Fare","Balance","Status","Updates","Pending",""] .map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((c,i)=>{const f=calcFare(c,tour,customers);const gcol=hashColor(c.groupName,.18),gtext=hashColor(c.groupName,1),rcol=hashColor(c.roomGroup||c.roomPartner,.1),bday=birthdayInTour(c.dob,tour.departureDate,tour.arrivalDate),active=isActiveInTour(c,tour.tourCode),pt=pendingTasks(c,tour,customers);return h("tr",{key:c.id},h("td",null,i+1),h("td",{style:{background:gcol||undefined,color:gtext||undefined,borderLeft:gcol?`3px solid ${gtext}`:undefined}},h("b",null,fullName(c)),h("div",{style:{fontSize:10,color:gtext||"#64748b",fontWeight:c.bookingType==="Group"?800:400}},c.bookingType==="Group"?`Group: ${c.groupName||"—"}`:"Individual"),c.status==="Transferred"&&c.transferToTour===tour.tourCode&&h("div",{style:{fontSize:10,color:"#7c3aed",fontWeight:800}},`From ${c.tourCode}`)),h("td",null,c.contact||"—"),h("td",{style:{background:bday?"#fef3c7":undefined,color:bday?"#92400e":undefined,fontWeight:bday?900:400}},fmtDate(c.dob),bday?" 🎂":""),h("td",{style:{background:rcol||undefined}},c.roomType,h("div",{style:{fontSize:10,color:"#64748b"}},c.roomPartner||c.roomGroup||"")),h("td",null,c.mealRestriction==="Other"?`Other: ${c.mealOther}`:c.mealRestriction||"—"),h("td",null,c.visaStatus||"—"),h("td",null,c.passportNo||"—",h("div",{style:{fontSize:10,color:"#94a3b8"}},fmtDate(c.passportExpiry))),h("td",null,c.flightHotelExtension||"—"),h("td",{style:{fontWeight:800}},active?fmt(f.fare):"—"),h("td",{style:{color:f.balance>0?"#dc2626":"#16a34a",fontWeight:900}},active?fmt(Math.abs(f.balance)):"—"),h("td",null,h(Badge,{status:active&&c.status==="Transferred"?"Active":c.status})),h("td",null,h("div",{style:{fontSize:10,color:boolify(c.informedDateChange)?"#16a34a":"#94a3b8"}},boolify(c.informedDateChange)?"✅ Date":"— Date"),h("div",{style:{fontSize:10,color:boolify(c.informedCancellation)?"#16a34a":"#94a3b8"}},boolify(c.informedCancellation)?"✅ Cancel":"— Cancel")),h("td",null,pt.slice(0,2).map(x=>h("div",{key:x.title,className:"pending-item"},x.title))),h("td",null,h(Btn,{size:"sm",onClick:()=>onEdit(c)},"Edit")))}))))}
-function PaymentReminderSheet({tours,customers,tasks,onUpdateTask,onBack}){const rows=[];tours.forEach(t=>customers.filter(c=>isActiveInTour(c,t.tourCode)).forEach(c=>{pendingTasks(c,t,customers).filter(x=>x.category==="Payment").forEach(x=>{const title=`${t.tourCode}_${x.title}`;const done=tasks.some(ts=>ts.tourCode===t.tourCode&&ts.customerId===c.id&&ts.title===title&&ts.status==="Done");rows.push({tour:t,cust:c,title,amount:x.amount,done})})}));return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center"}},h(Btn,{onClick:onBack},"← Back"),h("h2",null,"💳 Payment Reminder Sheet")),h(Card,null,h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Tour Code","Traveller","Which Payment to Collect","Amount to Collect","Checkbox"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i,style:{textDecoration:r.done?"line-through":"none",opacity:r.done?0.6:1}},h("td",null,r.tour.tourCode),h("td",null,fullName(r.cust)),h("td",null,r.title),h("td",null,fmt(r.amount)),h("td",null,h("input",{type:"checkbox",checked:r.done,onChange:()=>onUpdateTask(makeTask(r.tour.tourCode,r.cust.id,r.title,"Payment","Payment reminder completed"))}))))))))) }
+function CustomerTable({tour,customers,onEdit,show="Active",filter}){let rows=show==="Active"?customers.filter(c=>isActiveInTour(c,tour.tourCode)):show==="Inactive"?customers.filter(c=>isInactiveOriginal(c,tour.tourCode)):customers.filter(c=>isActiveInTour(c,tour.tourCode)||isInactiveOriginal(c,tour.tourCode));if(filter){const f=filter.toLowerCase();rows=rows.filter(c=>(fullName(c)+c.contact+c.groupName+c.roomGroup+c.status+c.mealRestriction+c.visaStatus+c.roomPartner).toLowerCase().includes(f))}if(!rows.length)return h("div",{className:"empty-state"},"No customers.");return h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["#","Name","Contact","Group PNR","Birthday","Room","Meal","Visa","Passport","Ext.","Fare","Balance","Status","Updates","Pending",""] .map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((c,i)=>{const f=calcFare(c,tour,customers);const gcol=hashColor(c.groupName,.18),gtext=hashColor(c.groupName,1),rcol=hashColor(c.roomGroup||c.roomPartner,.1),bday=birthdayInTour(c.dob,tour.departureDate,tour.arrivalDate),active=isActiveInTour(c,tour.tourCode),pt=pendingTasks(c,tour,customers);return h("tr",{key:c.id},h("td",null,i+1),h("td",{style:{background:gcol||undefined,color:gtext||undefined,borderLeft:gcol?`3px solid ${gtext}`:undefined}},h("b",null,fullName(c)),h("div",{style:{fontSize:10,color:gtext||"#64748b",fontWeight:c.bookingType==="Group"?800:400}},c.bookingType==="Group"?`Group: ${c.groupName||"—"}`:"Individual"),c.status==="Transferred"&&c.transferToTour===tour.tourCode&&h("div",{style:{fontSize:10,color:"#7c3aed",fontWeight:800}},`From ${c.tourCode}`)),h("td",null,c.contact||"—"),h("td",null,boolify(c.differentPNR)?h("span",{className:"badge",style:{background:"#fef3c7",color:"#92400e",fontSize:10,display:"block",textAlign:"center"}},c.anotherPNR||"Own PNR"):boolify(c.noIntlFlight)?h("span",{className:"badge",style:{background:"#f3e8ff",color:"#7e22ce",fontSize:10}},"No Flight"):h("span",{style:{fontSize:11,color:"#94a3b8"}},"Group")),h("td",{style:{background:bday?"#fef3c7":undefined,color:bday?"#92400e":undefined,fontWeight:bday?900:400}},fmtDate(c.dob),bday?" 🎂":""),h("td",{style:{background:rcol||undefined}},c.roomType,h("div",{style:{fontSize:10,color:"#64748b"}},c.roomPartner||c.roomGroup||"")),h("td",null,c.mealRestriction==="Other"?`Other: ${c.mealOther}`:c.mealRestriction||"—"),h("td",null,c.visaStatus||"—"),h("td",null,c.passportNo||"—",h("div",{style:{fontSize:10,color:"#94a3b8"}},fmtDate(c.passportExpiry))),h("td",null,c.flightHotelExtension||"—"),h("td",{style:{fontWeight:800}},active?fmt(f.fare):"—"),h("td",{style:{color:f.balance>0?"#dc2626":"#16a34a",fontWeight:900}},active?fmt(Math.abs(f.balance)):"—"),h("td",null,h(Badge,{status:active&&c.status==="Transferred"?"Active":c.status})),h("td",null,h("div",{style:{fontSize:10,color:boolify(c.informedDateChange)?"#16a34a":"#94a3b8"}},boolify(c.informedDateChange)?"✅ Date":"— Date"),h("div",{style:{fontSize:10,color:boolify(c.informedCancellation)?"#16a34a":"#94a3b8"}},boolify(c.informedCancellation)?"✅ Cancel":"— Cancel")),h("td",null,pt.slice(0,2).map(x=>h("div",{key:x.title,className:"pending-item"},x.title))),h("td",null,h(Btn,{size:"sm",onClick:()=>onEdit(c)},"Edit")))}))))}
+function PaymentReminderSheet({tours,customers,tasks,onUpdateTask,onBack}){const rows=[];tours.forEach(t=>customers.filter(c=>isActiveInTour(c,t.tourCode)).forEach(c=>{pendingTasks(c,t,customers).filter(x=>x.category==="Payment").forEach(x=>{const title=`${t.tourCode}_${x.title}`;const done=tasks.some(ts=>ts.tourCode===t.tourCode&&ts.customerId===c.id&&ts.title===title&&ts.status==="Done");rows.push({tour:t,cust:c,title,amount:x.amount,done})})}));return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},h(Btn,{onClick:onBack},"← Back"),h("h2",null,"💳 Payment Reminder Sheet"),h("span",{style:{fontSize:12,color:"#64748b",marginLeft:8}},"Check off items as you contact customers")),h(Card,null,h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Tour Code","Traveller","Which Payment to Collect","Amount to Collect","Checkbox"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i,style:{textDecoration:r.done?"line-through":"none",opacity:r.done?0.6:1}},h("td",null,r.tour.tourCode),h("td",null,fullName(r.cust)),h("td",null,r.title),h("td",null,fmt(r.amount)),h("td",null,h("input",{type:"checkbox",checked:r.done,onChange:()=>onUpdateTask(makeTask(r.tour.tourCode,r.cust.id,r.title,"Payment","Payment reminder completed"))}))))))))) }
 function TaskWall({tour,customers,tasks,onAddTask,onUpdateTask}){
   const [title,setTitle]=useState("");
   const [cat,setCat]=useState("General");
@@ -191,14 +298,94 @@ function TaskWall({tour,customers,tasks,onAddTask,onUpdateTask}){
   );
 }
 
-function DashboardNotificationWall({tasks,tours,customers,onOpen}){const notifs=[];tasks.filter(t=>t.status!=="Done").forEach(t=>notifs.push({date:dateKey(t.createdAt),tourCode:t.tourCode,title:`${t.tourCode||"GENERAL"}_Update – ${t.title}`,cat:t.category,task:t}));const grouped=groupByDate(notifs);return h(Card,null,h(Section,{icon:"🔔",title:"Notification Centre"}),Object.keys(grouped).length?Object.entries(grouped).map(([d,arr])=>h("div",{key:d,style:{marginBottom:12}},h("h4",null,d),arr.map((n,i)=>h("div",{key:i,style:{fontSize:12,padding:"4px 0"}},n.title)))):h("div",{className:"notice success"},"No notifications."))}
+function DashboardNotificationWall({tasks,tours,customers,onOpen}){
+  const today=new Date();
+  const urgent=[];
+  tours.filter(t=>t.status==="Confirmed"||t.status==="Pending").forEach(t=>{
+    const days=Math.ceil((new Date(t.departureDate)-today)/86400000);
+    if(days>=0&&days<=30){
+      const active=customers.filter(c=>isActiveInTour(c,t.tourCode));
+      const unpaid=active.filter(c=>calcFare(c,t,customers).balance>0).length;
+      const noPassport=active.filter(c=>!c.passportNo).length;
+      if(days<=7)urgent.push({type:"critical",icon:"🔴",text:`${t.tourCode} departs in ${days} day${days===1?"":"s"}!`,sub:`${active.length} pax${unpaid?` · ${unpaid} unpaid balance`:""}${noPassport?` · ${noPassport} no passport`:""}`,tour:t});
+      else if(days<=14)urgent.push({type:"urgent",icon:"🟠",text:`${t.tourCode} departs in ${days} days`,sub:`${active.length} pax${unpaid?` · ${unpaid} unpaid balance`:""}`,tour:t});
+      else if(unpaid>0)urgent.push({type:"payment",icon:"💰",text:`${t.tourCode}: ${unpaid} traveller${unpaid>1?"s":""} with outstanding balance`,sub:`${days} days until departure`,tour:t});
+    }
+  });
+  const pendingTasks=tasks.filter(t=>t.status!=="Done").slice(0,6);
+  return h(Card,null,
+    h(Section,{icon:"🔔",title:"Notification Centre",right:h("span",{className:"badge",style:{background:urgent.length?"#fee2e2":"#dcfce7",color:urgent.length?"#dc2626":"#166534"}},urgent.length?`${urgent.length} alerts`:"All Clear")}),
+    urgent.length===0&&pendingTasks.length===0?h("div",{className:"notice success"},"✅ No urgent notifications. Everything is on track!"):null,
+    urgent.map((n,i)=>h("div",{key:i,style:{display:"flex",gap:10,alignItems:"flex-start",padding:"10px 12px",background:n.type==="critical"?"#fff1f2":n.type==="urgent"?"#fff7ed":"#fffbeb",borderRadius:8,marginBottom:6,borderLeft:`3px solid ${n.type==="critical"?"#ef4444":n.type==="urgent"?"#f97316":"#f59e0b"}`,cursor:"pointer"},onClick:()=>onOpen(n.tour)},
+      h("span",{style:{fontSize:18}},n.icon),
+      h("div",{style:{flex:1}},
+        h("div",{style:{fontWeight:800,fontSize:13,color:n.type==="critical"?"#dc2626":n.type==="urgent"?"#b45309":"#92400e"}},n.text),
+        h("div",{style:{fontSize:11,color:"#64748b",marginTop:2}},n.sub)
+      ),
+      h("span",{style:{fontSize:11,color:"#94a3b8",fontWeight:700}},"View →")
+    )),
+    pendingTasks.length>0&&h("div",{style:{marginTop:urgent.length?10:0}},
+      h("div",{style:{fontSize:11,fontWeight:800,color:"#64748b",textTransform:"uppercase",letterSpacing:".06em",marginBottom:6}},"Recent Pending Tasks"),
+      pendingTasks.map((t,i)=>h("div",{key:i,style:{fontSize:12,padding:"5px 0",borderBottom:"1px solid #f1f5f9",color:"#374151",display:"flex",gap:8}},
+        h("span",{style:{color:"#2563eb",fontWeight:700,minWidth:80}},t.tourCode||"GENERAL"),
+        h("span",null,String(t.title||"").replace((t.tourCode||"")+"_",""))
+      ))
+    )
+  );
+}
 function ActionCentre({tours,customers,tasks,onUpdateTask}){const rows=[];tours.forEach(t=>customers.filter(c=>isActiveInTour(c,t.tourCode)||isInactiveOriginal(c,t.tourCode)).forEach(c=>pendingTasks(c,t,customers).forEach(x=>{const title=`${t.tourCode}_${x.title}`;const done=tasks.some(ts=>ts.tourCode===t.tourCode&&ts.customerId===c.id&&ts.title===title&&ts.status==="Done");rows.push({date:dateKey(new Date()),title,done,tour:t,cust:c,cat:x.category,amount:x.amount})})));const grouped=groupByDate(rows);return h(Card,null,h(Section,{icon:"✅",title:"Action Centre",right:h("span",{className:"badge",style:{background:"#fee2e2",color:"#dc2626"}},rows.filter(x=>!x.done).length+" pending")}),Object.entries(grouped).map(([d,arr])=>h("div",{key:d,style:{marginBottom:14}},h("h4",null,d),arr.map((r,i)=>h("label",{key:i,style:{display:"flex",gap:8,alignItems:"center",fontSize:12,padding:"4px 0",textDecoration:r.done?"line-through":"none",opacity:r.done?0.6:1}},h("input",{type:"checkbox",checked:r.done,onChange:()=>onUpdateTask(makeTask(r.tour.tourCode,r.cust.id,r.title,r.cat,"Done from action centre"))}),r.title,r.amount?` — ${fmt(r.amount)}`:"")))))}
 function GoalTracker({goals,onSave,customers}){const [edit,setEdit]=useState(false);const [g,setG]=useState(goals);useEffect(()=>setG(goals),[goals]);const annualGoal=Number(g.annualTravellerGoal||6000),monthlyGoal=Number(g.monthlySignUpGoal||400),signupGoal=Number(g.annualSignUpGoal||4000);const now=new Date(),yr=now.getFullYear(),mo=now.getMonth();const annual=customers.filter(c=>c.status==="Active").length;const monthly=customers.filter(c=>{const id=String(c.id||"");const d=id.includes("cust_")?new Date(Number(id.split("_")[1])):null;return d&&!isNaN(d)&&d.getFullYear()===yr&&d.getMonth()===mo}).length;function bar(label,val,goal){const pct=goal?Math.min(100,Math.round(val/goal*100)):0;return h("div",null,h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:800}},h("span",null,label),h("span",null,`${fmtInt(val)} / ${fmtInt(goal)} Pax · ${pct}% Achieved · ${Math.max(0,goal-val)} Remaining`)),h("div",{className:"progress-bar",style:{marginTop:5}},h("div",{className:"progress-fill",style:{width:pct+"%"}})))}return h(Card,null,h(Section,{icon:"🎯",title:"Goal Tracker",right:h(Btn,{size:"sm",onClick:()=>setEdit(!edit)},edit?"Close":"Set Goals")}),edit&&h(Grid,{n:3},h(Field,{label:"Annual Traveller Goal",type:"number",value:g.annualTravellerGoal,onChange:v=>setG(o=>({...o,annualTravellerGoal:v}))}),h(Field,{label:"Monthly Sign-Up Goal",type:"number",value:g.monthlySignUpGoal,onChange:v=>setG(o=>({...o,monthlySignUpGoal:v}))}),h(Field,{label:"Annual Sign-Up Goal",type:"number",value:g.annualSignUpGoal,onChange:v=>setG(o=>({...o,annualSignUpGoal:v}))}),h("div",{style:{gridColumn:"span 3",display:"flex",justifyContent:"flex-end"}},h(Btn,{variant:"primary",onClick:()=>{onSave(g);setEdit(false)}},"Save Goals"))),h("div",{className:"grid"},bar("Annual Traveller Goal",annual,annualGoal),bar("Monthly Sign-Up Goal",monthly,monthlyGoal),bar("Annual Sign-Up Goal",annual,signupGoal)))}
 function AnnouncementHub({announcements,onSave,onCreateTask,onCreateVoucher}){const [form,setForm]=useState({type:"Campaign"});const u=(k,v)=>setForm(o=>({...o,[k]:v}));function save(){const row={id:"ann_"+Date.now(),...form,createdAt:new Date().toISOString()};onSave([...announcements,row]);if(form.type==="Campaign"&&boolify(form.specialDiscount))onCreateVoucher({id:"voucher_"+Date.now(),voucherName:form.campaignName||form.name||"Campaign Discount",voucherType:"Campaign Discount",amount:"",period:form.promotionPeriod||"Campaign Period",campaignName:form.campaignName||form.name||"",entitledByName:"",expiryDate:"",isActive:"TRUE",usedByName:"",usedByTourCode:"",usedDate:"",terms:form.terms||"",notes:form.promotion||""});if(form.type==="Itinerary Update"&&boolify(form.actionRequired))onCreateTask(makeTask("GENERAL","",`${form.itineraryName||"Itinerary"}_Notify affected tour groups`,"Itinerary Update",form.updates||""));setForm({type:"Campaign"})}return h(Card,null,h(Section,{icon:"📢",title:"Announcement Hub"}),h(Grid,{n:3},h(Field,{label:"Announcement Type",value:form.type,onChange:v=>u("type",v),options:ANN_TYPES}),h(Field,{label:"Name",value:form.name||form.campaignName||form.eventName||form.holidayName||form.employeeName||"",onChange:v=>u("name",v)}),h(Field,{label:"Date",type:"date",value:form.date,onChange:v=>u("date",v)})),form.type==="Campaign"&&h(Grid,{n:2},h(Field,{label:"Program",value:form.program,onChange:v=>u("program",v)}),h(Field,{label:"Promotion",value:form.promotion,onChange:v=>u("promotion",v)}),h(Check,{label:"Special Discount Promotion",checked:form.specialDiscount,onChange:v=>u("specialDiscount",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Discount Tier",value:form.discountTier,onChange:v=>u("discountTier",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Promotion Period",value:form.promotionPeriod,onChange:v=>u("promotionPeriod",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Terms & Conditions",type:"textarea",value:form.terms,onChange:v=>u("terms",v)})),form.type==="Itinerary Update"&&h(Grid,{n:2},h(Field,{label:"Itinerary Name",value:form.itineraryName,onChange:v=>u("itineraryName",v)}),h(Check,{label:"Action Required",checked:form.actionRequired,onChange:v=>u("actionRequired",v)}),h("div",{style:{gridColumn:"span 2"}},h(Field,{label:"What Updates",type:"textarea",value:form.updates,onChange:v=>u("updates",v)}))),form.type==="Company Event"&&h(Grid,{n:3},h(Field,{label:"Event Time",value:form.time,onChange:v=>u("time",v)}),h(Field,{label:"Venue",value:form.venue,onChange:v=>u("venue",v)})),form.type==="Public Holiday"&&h(Field,{label:"Remarks",type:"textarea",value:form.remarks,onChange:v=>u("remarks",v)}),form.type==="Employee Birthday"&&h(Grid,{n:2},h(Field,{label:"Employee Name",value:form.employeeName,onChange:v=>u("employeeName",v)}),h(Field,{label:"Department",value:form.department,onChange:v=>u("department",v)})),h("div",{style:{display:"flex",justifyContent:"flex-end",marginTop:10}},h(Btn,{variant:"primary",onClick:save},"Add Announcement")),h("div",{style:{marginTop:12,maxHeight:180,overflow:"auto"}},announcements.slice(-8).reverse().map(a=>h("div",{key:a.id,className:"notice info",style:{marginBottom:6}},`${a.type}: ${a.name||a.campaignName||a.itineraryName||a.employeeName||"—"} — ${fmtDate(a.date)}`))))}
 function VoucherLibrary({vouchers,onSave,onBack}){const [rows,setRows]=useState(vouchers.length?vouchers:DEFAULT_VOUCHERS);useEffect(()=>setRows(vouchers.length?vouchers:DEFAULT_VOUCHERS),[vouchers]);function u(i,k,v){const a=[...rows];a[i]={...a[i],[k]:v};setRows(a)}function add(){setRows([...rows,{id:"voucher_"+Date.now(),voucherName:"",voucherType:"Campaign Discount",amount:"",period:"",rule:"",campaignName:"",entitledByName:"",expiryDate:"",isActive:"TRUE",usedByName:"",usedByTourCode:"",usedDate:"",terms:"",notes:""}])}return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center"}},h(Btn,{onClick:onBack},"← Back"),h("h2",null,"🎟️ Voucher Sheet"),h("div",{style:{marginLeft:"auto"}},h(Btn,{variant:"primary",onClick:()=>onSave(rows)},"Save"))),h(Card,null,h(Section,{icon:"📌",title:"Voucher Sheet / Ongoing Rules"}),h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Voucher","Type","Amount","Period","Event/Campaign","T&C","Active"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:r.id||i},h("td",null,h("input",{value:r.voucherName||"",onChange:e=>u(i,"voucherName",e.target.value)})),h("td",null,h("select",{value:r.voucherType||"",onChange:e=>u(i,"voucherType",e.target.value)},VOUCHER_TYPES.map(x=>h("option",{key:x},x)))),h("td",null,h("input",{type:"number",value:r.amount||"",onChange:e=>u(i,"amount",e.target.value)})),h("td",null,h("input",{value:r.period||"",onChange:e=>u(i,"period",e.target.value)})),h("td",null,h("input",{value:r.campaignName||"",onChange:e=>u(i,"campaignName",e.target.value)})),h("td",null,h("textarea",{value:r.terms||r.rule||"",onChange:e=>{u(i,"terms",e.target.value);u(i,"rule",e.target.value)},style:{minHeight:44}})),h("td",null,h("select",{value:String(r.isActive||"TRUE"),onChange:e=>u(i,"isActive",e.target.value)},["TRUE","FALSE"].map(x=>h("option",{key:x},x))))))))),h("div",{style:{marginTop:10,display:"flex",justifyContent:"flex-end",gap:8}},h(Btn,{onClick:add},"+ Add Voucher"),h(Btn,{variant:"primary",onClick:()=>onSave(rows)},"Save"))))}
-function CustomerDatabase({customers,onEdit,onBack}){const [q,setQ]=useState(""),[sort,setSort]=useState("latest");const map={};customers.forEach(c=>{const k=(c.contact||c.passportNo||fullName(c)).toUpperCase();if(!map[k])map[k]={title:c.title,name:fullName(c),phone:c.contact,email:c.email,address:c.address,passport:c.passportNo,count:0,tours:[],latest:0,raw:c};map[k].latest=Math.max(map[k].latest,Number(String(c.id||"").split("_")[1])||0);map[k].raw=c;if(c.tourCode&&!map[k].tours.includes(c.tourCode)){map[k].tours.push(c.tourCode);if(c.status!=="Cancelled")map[k].count++}});let rows=Object.values(map).filter(r=>!q||(r.name+r.phone+r.passport).toLowerCase().includes(q.toLowerCase()));rows.sort((a,b)=>sort==="latest"?b.latest-a.latest:sort==="oldest"?a.latest-b.latest:sort==="most"?b.count-a.count:a.count-b.count);return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center"}},h(Btn,{onClick:onBack},"← Back"),h("h2",null,"📋 Customer Database")),h(Card,null,h("div",{style:{display:"flex",gap:8,marginBottom:12}},h("input",{placeholder:"Search customer name / phone / passport",value:q,onChange:e=>setQ(e.target.value)}),h("select",{value:sort,onChange:e=>setSort(e.target.value),style:{maxWidth:240}},h("option",{value:"latest"},"Latest to Oldest"),h("option",{value:"oldest"},"Oldest to Latest"),h("option",{value:"most"},"Highest Number of Join to Least"),h("option",{value:"least"},"Least to Highest"))),h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Title","Name","Phone Number","Email","Address","Passport Number","Number of Tour Joined","Which Tour Joined","Action"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i},h("td",null,r.title||"—"),h("td",{style:{fontWeight:900}},r.name),h("td",null,r.phone||"—"),h("td",null,r.email||"—"),h("td",null,r.address||"—"),h("td",null,r.passport||"—"),h("td",{style:{fontWeight:900,color:"#2563eb"}},r.count),h("td",null,r.tours.join(", ")),h("td",null,h(Btn,{size:"sm",onClick:()=>onEdit(r.raw)},"Open"))))))))) }
-function Dashboard({tours,customers,tasks,goals,onSaveGoals,announcements,onSaveAnnouncements,onCreateTask,onCreateVoucher,onOpen,onEdit,onUpdateTask}){const [year,setYear]=useState(String(new Date().getFullYear())),[q,setQ]=useState(""),[sf,setSf]=useState("All");const filtered=tours.filter(t=>{const y=t.departureDate?String(new Date(t.departureDate).getFullYear()):year;return y===year&&(!q||(t.tourCode+t.tourName+t.tourManager).toLowerCase().includes(q.toLowerCase()))&&(sf==="All"||t.status===sf)});const totalTrav=customers.filter(c=>c.status==="Active").length;return h("div",{className:"grid"},h(Section,{icon:"📊",title:"A. Business Snapshot"}),h(Grid,{n:3},h(StatBox,{label:"Total Tour Series",value:tours.length}),h(StatBox,{label:"Completed Departures",value:tours.filter(t=>t.status==="Completed").length}),h(StatBox,{label:"Total Travellers",value:totalTrav})),h(GoalTracker,{goals,onSave:onSaveGoals,customers}),h(ActionCentre,{tours,customers,tasks,onUpdateTask}),h(Section,{icon:"🗓️",title:"D. Departures Dashboard"}),h("div",{style:{display:"flex",gap:8}},h("select",{value:year,onChange:e=>setYear(e.target.value),style:{maxWidth:140}},[...new Set([String(new Date().getFullYear()),...tours.map(t=>t.departureDate?String(new Date(t.departureDate).getFullYear()):"").filter(Boolean)])].sort().map(y=>h("option",{key:y},y))),h("input",{placeholder:"Search tour",value:q,onChange:e=>setQ(e.target.value)}),h("select",{value:sf,onChange:e=>setSf(e.target.value),style:{maxWidth:160}},["All",...TOUR_STATUSES].map(x=>h("option",{key:x},x)))),h(Card,null,h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Tour Code","Tour Name","Flight Company","Departure Date","Arrival Date","Pax","Normal Price","Today Price","Discount Amount","D/N","Tour Manager","Tour Status","Meal Included","Meal Excluded","Guaranteed Departure"].map(x=>h("th",{key:x},x)))),h("tbody",null,filtered.map(t=>{const pax=activePax(customers,t.tourCode),pc=paxColor(pax),disc=getTourDiscount(t,pax),dn=calcDN(t.departureDate,t.arrivalDate);return h("tr",{key:t.id},h("td",{style:{fontWeight:900,color:"#2563eb",cursor:"pointer"},onClick:()=>onOpen(t)},t.tourCode),h("td",null,t.tourName),h("td",null,t.internationalAirline||t.airline||"—"),h("td",null,fmtDate(t.departureDate)),h("td",null,fmtDate(t.arrivalDate)),h("td",null,h("span",{className:"badge",style:{background:pc.bg,color:pc.col}},pax),pax>=28&&h("span",{className:"badge",style:{background:"#16a34a",color:"#fff",marginLeft:4}},"FULL")),h("td",null,fmt(t.normalPrice)),h("td",{style:{fontWeight:900,color:"#166534"}},fmt(Number(t.normalPrice||0)-disc)),h("td",{style:{color:"#dc2626",fontWeight:800}},disc?fmt(disc):"—"),h("td",null,dn.days?`${dn.days}D/${dn.nights}N`:"—"),h("td",null,t.tourManager||"—"),h("td",null,h(Badge,{status:t.status})),h("td",null,t.mealIncluded||0),h("td",null,t.mealExcluded||0),h("td",null,t.status==="Confirmed"||pax>=18?"Guaranteed":"Pending"))}))))),h(DashboardNotificationWall,{tasks,tours,customers,onOpen}),h(AnnouncementHub,{announcements,onSave:onSaveAnnouncements,onCreateTask,onCreateVoucher}))}
-function SignIn({onSignIn}){const [busy,setBusy]=useState(false),[err,setErr]=useState("");return h("div",{style:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#0f172a,#1e3a5f)",padding:20}},h(Card,{style:{maxWidth:480,width:"100%",textAlign:"center",padding:40}},h("div",{style:{fontSize:52,marginBottom:8}},"✈️"),h("h1",{style:{fontSize:24,fontWeight:900}},"Tour Ops System"),h("p",{style:{color:"#64748b",margin:"8px 0 28px",fontSize:13}},"Tour, customer, flight, voucher, payment & task tracking."),h(Btn,{variant:"primary",size:"lg",disabled:busy,onClick:async()=>{setBusy(true);setErr("");try{await onSignIn(await requestGoogleToken("consent"))}catch(e){setErr(e.message)}setBusy(false)}},busy?"Connecting…":"🔑 Sign in with Google"),err&&h("div",{className:"notice danger",style:{marginTop:14,textAlign:"left"}},err)))}
+function CustomerDatabase({customers,onEdit,onBack}){const [q,setQ]=useState(""),[sort,setSort]=useState("latest");const map={};customers.forEach(c=>{const k=(c.contact||c.passportNo||fullName(c)).toUpperCase();if(!map[k])map[k]={title:c.title,name:fullName(c),phone:c.contact,email:c.email,address:c.address,passport:c.passportNo,count:0,tours:[],latest:0,raw:c};map[k].latest=Math.max(map[k].latest,Number(String(c.id||"").split("_")[1])||0);map[k].raw=c;if(c.tourCode&&!map[k].tours.includes(c.tourCode)){map[k].tours.push(c.tourCode);if(c.status!=="Cancelled")map[k].count++}});let rows=Object.values(map).filter(r=>!q||(r.name+r.phone+r.passport).toLowerCase().includes(q.toLowerCase()));rows.sort((a,b)=>sort==="latest"?b.latest-a.latest:sort==="oldest"?a.latest-b.latest:sort==="most"?b.count-a.count:a.count-b.count);return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},
+  h(Btn,{onClick:onBack},"← Back"),
+  h("h2",null,"📋 Customer Database"),
+  h("div",{style:{marginLeft:"auto",display:"flex",gap:8}},
+    h(Btn,{size:"sm",onClick:()=>{
+      const headers=["Title","Name","Phone","Email","Address","Passport","Tours Joined","Tour Count"];
+      const csvRows=[headers,...Object.values(customers.reduce((map,c)=>{
+        const k=(c.contact||c.passportNo||fullName(c)).toUpperCase();
+        if(!map[k])map[k]={title:c.title,name:fullName(c),phone:c.contact,email:c.email,address:c.address,passport:c.passportNo,tours:[],count:0};
+        if(c.tourCode&&!map[k].tours.includes(c.tourCode)){map[k].tours.push(c.tourCode);if(c.status!=="Cancelled")map[k].count++}
+        return map;
+      },{})).map(r=>[r.title||"",r.name,r.phone||"",r.email||"",r.address||"",r.passport||"",r.tours.join("|"),r.count])];
+      const csv=csvRows.map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'""')}"`).join(",")).join("\n");
+      const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download="customers.csv";a.click();
+    }},"⬇️ Export CSV")
+  )
+),h(Card,null,h("div",{style:{display:"flex",gap:8,marginBottom:12}},h("input",{placeholder:"Search customer name / phone / passport",value:q,onChange:e=>setQ(e.target.value)}),h("select",{value:sort,onChange:e=>setSort(e.target.value),style:{maxWidth:240}},h("option",{value:"latest"},"Latest to Oldest"),h("option",{value:"oldest"},"Oldest to Latest"),h("option",{value:"most"},"Highest Number of Join to Least"),h("option",{value:"least"},"Least to Highest"))),h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Title","Name","Phone Number","Email","Address","Passport Number","Number of Tour Joined","Which Tour Joined","Action"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i},h("td",null,r.title||"—"),h("td",{style:{fontWeight:900}},r.name),h("td",null,r.phone||"—"),h("td",null,r.email||"—"),h("td",null,r.address||"—"),h("td",null,r.passport||"—"),h("td",{style:{fontWeight:900,color:"#2563eb"}},r.count),h("td",null,r.tours.join(", ")),h("td",null,h(Btn,{size:"sm",onClick:()=>onEdit(r.raw)},"Open"))))))))) }
+function Dashboard({tours,customers,tasks,goals,onSaveGoals,announcements,onSaveAnnouncements,onCreateTask,onCreateVoucher,onOpen,onEdit,onUpdateTask}){const [year,setYear]=useState(String(new Date().getFullYear())),[q,setQ]=useState(""),[sf,setSf]=useState("All");const filtered=tours.filter(t=>{const y=t.departureDate?String(new Date(t.departureDate).getFullYear()):year;return y===year&&(!q||(t.tourCode+t.tourName+t.tourManager).toLowerCase().includes(q.toLowerCase()))&&(sf==="All"||t.status===sf)});const totalTrav=customers.filter(c=>c.status==="Active").length;return h("div",{className:"grid"},h(Section,{icon:"📊",title:"A. Business Snapshot"}),h(Grid,{n:3},h(StatBox,{label:"Total Tour Series",value:tours.length}),h(StatBox,{label:"Completed Departures",value:tours.filter(t=>t.status==="Completed").length}),h(StatBox,{label:"Total Travellers",value:totalTrav})),h(GoalTracker,{goals,onSave:onSaveGoals,customers}),h(Card,{style:{background:"linear-gradient(135deg,#1e3a5f,#0f172a)",border:"none"}},
+    h(Section,{icon:"✅",title:h("span",{style:{color:"#e2e8f0"}},"Action Centre Snapshot"),right:h(Btn,{size:"sm",variant:"primary",onClick:()=>{}},"View All")}),
+    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(100px,1fr))",gap:8,marginBottom:12}},
+      ...[
+        ["Pending",tasks.filter(t=>t.status!=="Done").length,"#fff7ed","#b45309"],
+        ["Payments",customers.filter(c=>{const t=tours.find(x=>x.tourCode===c.tourCode);return t&&calcFare(c,t,customers).balance>0&&c.status==="Active"}).length,"#fef3c7","#92400e"],
+        ["No Passport",customers.filter(c=>c.status==="Active"&&!c.passportNo).length,"#eff6ff","#1d4ed8"],
+        ["Critical",tours.filter(t=>{const d=Math.ceil((new Date(t.departureDate)-new Date())/86400000);return d>=0&&d<=7&&(t.status==="Confirmed"||t.status==="Pending")}).length,"#fee2e2","#dc2626"]
+      ].map(([label,val,bg,col])=>h("div",{style:{background:bg,borderRadius:8,padding:"10px 12px",textAlign:"center"}},
+        h("div",{style:{fontSize:22,fontWeight:900,color:col}},val),
+        h("div",{style:{fontSize:10,fontWeight:800,color:col,textTransform:"uppercase",letterSpacing:".05em"}},label)
+      ))
+    ),
+    tasks.filter(t=>t.status!=="Done").slice(0,4).map((t,i)=>h("div",{key:i,style:{display:"flex",gap:8,alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(255,255,255,.06)"}},
+      h("span",{style:{fontSize:10,fontWeight:800,color:"#93c5fd",minWidth:70}},t.tourCode||"GENERAL"),
+      h("span",{style:{fontSize:12,color:"#e2e8f0",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},String(t.title||"").replace((t.tourCode||"")+"_","")),
+      h("span",{className:"badge",style:{background:"rgba(255,255,255,.1)",color:"#94a3b8",fontSize:10}},t.category||"Task")
+    )),
+    tasks.filter(t=>t.status!=="Done").length>4&&h("div",{style:{fontSize:11,color:"#64748b",textAlign:"center",marginTop:8}},`+${tasks.filter(t=>t.status!=="Done").length-4} more tasks — view Action Centre`)
+  ),h(Section,{icon:"🗓️",title:"D. Departures Dashboard"}),h("div",{style:{display:"flex",gap:8}},h("select",{value:year,onChange:e=>setYear(e.target.value),style:{maxWidth:140}},[...new Set([String(new Date().getFullYear()),...tours.map(t=>t.departureDate?String(new Date(t.departureDate).getFullYear()):"").filter(Boolean)])].sort().map(y=>h("option",{key:y},y))),h("input",{placeholder:"Search tour",value:q,onChange:e=>setQ(e.target.value)}),h("select",{value:sf,onChange:e=>setSf(e.target.value),style:{maxWidth:160}},["All",...TOUR_STATUSES].map(x=>h("option",{key:x},x)))),h(Card,null,h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["🚦","Tour Code","Tour Name","Flight Company","Departure Date","Days Left","Pax","Today Price","D/N","Tour Manager","Status","Guaranteed"].map(x=>h("th",{key:x},x)))),h("tbody",null,filtered.map(t=>{const pax=activePax(customers,t.tourCode),pc=paxColor(pax),disc=getTourDiscount(t,pax),dn=calcDN(t.departureDate,t.arrivalDate);return (()=>{const days=Math.ceil((new Date(t.departureDate)-new Date())/86400000);const urgency=days<=7?"critical":days<=14?"urgent":days<=30?"warning":"ok";const urgBg={critical:"#fee2e2",urgent:"#fff7ed",warning:"#fffbeb",ok:undefined};const urgCol={critical:"#dc2626",urgent:"#b45309",warning:"#854d0e",ok:undefined};return h("tr",{key:t.id,style:{background:urgBg[urgency]}},h("td",null,h("span",{style:{fontSize:14}},urgency==="critical"?"🔴":urgency==="urgent"?"🟠":urgency==="warning"?"🟡":"🟢")),h("td",{style:{fontWeight:900,color:"#2563eb",cursor:"pointer"},onClick:()=>onOpen(t)},t.tourCode),h("td",null,t.tourName),h("td",null,t.internationalAirline||t.airline||"—"),h("td",null,fmtDate(t.departureDate)),h("td",{style:{fontWeight:800,color:urgCol[urgency]||"#64748b"}},days>0&&days<365?`${days}d`:"—"),h("td",null,h("span",{className:"badge",style:{background:pc.bg,color:pc.col}},pax),pax>=28&&h("span",{className:"badge",style:{background:"#16a34a",color:"#fff",marginLeft:4}},"FULL")),h("td",{style:{fontWeight:900,color:"#166534"}},fmt(Number(t.normalPrice||0)-disc)),h("td",null,dn.days?`${dn.days}D/${dn.nights}N`:"—"),h("td",null,t.tourManager||"—"),h("td",null,h(Badge,{status:t.status})),h("td",null,t.status==="Confirmed"||pax>=18?h("span",{className:"badge",style:{background:"#dcfce7",color:"#166534"}},"✅ Guaranteed"):h("span",{className:"badge",style:{background:"#fef3c7",color:"#92400e"}},"⏳ Pending")))})()}))))),h(DashboardNotificationWall,{tasks,tours,customers,onOpen}),h(AnnouncementHub,{announcements,onSave:onSaveAnnouncements,onCreateTask,onCreateVoucher}))}
+function SignIn({onSignIn}){const [busy,setBusy]=useState(false),[err,setErr]=useState("");return h("div",{style:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#0f172a,#1e3a5f)",padding:20}},h(Card,{style:{maxWidth:480,width:"100%",textAlign:"center",padding:40}},h("div",{style:{fontSize:52,marginBottom:8}},"✈️"),h("h1",{style:{fontSize:24,fontWeight:900}},"Tour Ops System"),h("p",{style:{color:"#64748b",margin:"8px 0 8px",fontSize:13}},"Tour, customer, flight, voucher, payment & task tracking."),
+    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:24,marginTop:16}},
+      ...[["👥","Customers","Manage bookings & profiles"],["✈️","Tours","Track departures & flights"],["✅","Tasks","Action centre & reminders"],["💰","Payments","Monitor collections"],["🎟️","Vouchers","Discount management"],["📊","Dashboard","Business overview"]].map(([ico,title,desc])=>
+        h("div",{style:{background:"rgba(255,255,255,.06)",borderRadius:10,padding:"12px 10px",textAlign:"center"}},
+          h("div",{style:{fontSize:22,marginBottom:4}},ico),
+          h("div",{style:{color:"#e2e8f0",fontWeight:800,fontSize:12}},title),
+          h("div",{style:{color:"#475569",fontSize:10,marginTop:2}},desc)
+        )
+      )
+    ),
+    h(Btn,{variant:"primary",size:"lg",disabled:busy,onClick:async()=>{setBusy(true);setErr("");try{await onSignIn(await requestGoogleToken("consent"))}catch(e){setErr(e.message)}setBusy(false)},style:{width:"100%",justifyContent:"center",fontSize:15,padding:"14px 24px"}},busy?"Connecting…":"🔑 Sign in with Google to continue"),err&&h("div",{className:"notice danger",style:{marginTop:14,textAlign:"left"}},err),
+    h("p",{style:{color:"#334155",fontSize:11,marginTop:16}},"🔒 Secure Google OAuth — data stored in your own Google Sheets")))}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP
@@ -256,10 +443,19 @@ function pendingTasks(c,tour,customers){
 function ActionCentre({tours,customers,tasks,onUpdateTask}){
   const [filter,setFilter]=useState("All Tasks");
   const [q,setQ]=useState("");
+  const [showDone,setShowDone]=useState(false);
+  const [reminderModal,setReminderModal]=useState(null);
+  const [bulkSelected,setBulkSelected]=useState([]);
+
   function normCat(cat,title){
     const text=String(cat||"")+" "+String(title||"");
     if(/payment|deposit|balance/i.test(text))return "Payment Collection";
     if(/passport/i.test(text))return "Passport";
+    if(/date.change/i.test(text))return "Date Change";
+    if(/cancel/i.test(text))return "Cancellation";
+    if(/itinerary/i.test(text))return "Itinerary Update";
+    if(/refund/i.test(text))return "Refund";
+    if(/transfer/i.test(text))return "Transfer";
     return "Update";
   }
   function taskFor(title,tourCode,status){
@@ -270,10 +466,12 @@ function ActionCentre({tours,customers,tasks,onUpdateTask}){
     getTourActionItems(t,customers,tasks).forEach(item=>{
       const existing=taskFor(item.title,t.tourCode);
       const doneTask=taskFor(item.title,t.tourCode,"Done");
-      const done=!!doneTask || item.done;
+      const done=!!doneTask||item.done;
+      const days=daysUntilDeparture(t);
+      const urgency=days<=7?"critical":days<=14?"urgent":days<=30?"warning":"normal";
       rows.push({
         title:item.title,
-        actionItem:String(item.title||"").replace((t.tourCode||"")+"_", ""),
+        actionItem:String(item.title||"").replace((t.tourCode||"")+"_",""),
         category:normCat(item.category,item.title),
         rawCategory:item.category||"",
         date:item.date||dateKey(doneTask?.updatedAt||existing?.createdAt||new Date()),
@@ -284,7 +482,9 @@ function ActionCentre({tours,customers,tasks,onUpdateTask}){
         task:doneTask||existing||null,
         tour:t,
         customerId:"",
-        auto:true
+        auto:true,
+        urgency,
+        days
       });
     });
   });
@@ -293,9 +493,11 @@ function ActionCentre({tours,customers,tasks,onUpdateTask}){
     if(duplicate)return;
     const tour=(tours||[]).find(x=>x.tourCode===t.tourCode)||{tourCode:t.tourCode||"GENERAL"};
     const done=t.status==="Done";
+    const days=daysUntilDeparture(tour);
+    const urgency=days<=7?"critical":days<=14?"urgent":days<=30?"warning":"normal";
     rows.push({
       title:t.title,
-      actionItem:String(t.title||"").replace((tour.tourCode||"")+"_", ""),
+      actionItem:String(t.title||"").replace((tour.tourCode||"")+"_",""),
       category:normCat(t.category,t.title),
       rawCategory:t.category||"",
       date:dateKey(done?(t.updatedAt||t.createdAt):t.createdAt),
@@ -306,64 +508,227 @@ function ActionCentre({tours,customers,tasks,onUpdateTask}){
       task:t,
       tour,
       customerId:t.customerId||"",
-      auto:false
+      auto:false,
+      urgency,
+      days
     });
   });
+
   const pendingCount=rows.filter(r=>!r.done).length;
+  const criticalCount=rows.filter(r=>!r.done&&r.urgency==="critical").length;
+  const urgentCount=rows.filter(r=>!r.done&&r.urgency==="urgent").length;
+  const paymentCount=rows.filter(r=>!r.done&&r.category==="Payment Collection").length;
+
   const search=String(q||"").toLowerCase();
+  const CATS=["All Tasks","Payment Collection","Passport","Date Change","Cancellation","Itinerary Update","Refund","Transfer","Update"];
+  const CAT_COLORS={
+    "Payment Collection":{bg:"#fef3c7",col:"#92400e",border:"#f59e0b"},
+    "Passport":{bg:"#eff6ff",col:"#1d4ed8",border:"#3b82f6"},
+    "Date Change":{bg:"#fff7ed",col:"#c2410c",border:"#f97316"},
+    "Cancellation":{bg:"#fff1f2",col:"#be123c",border:"#fb7185"},
+    "Itinerary Update":{bg:"#f0fdf4",col:"#166534",border:"#4ade80"},
+    "Refund":{bg:"#fdf4ff",col:"#6b21a8",border:"#c084fc"},
+    "Transfer":{bg:"#f0f9ff",col:"#0369a1",border:"#38bdf8"},
+    "Update":{bg:"#f8fafc",col:"#475569",border:"#cbd5e1"}
+  };
+  const URGENCY_STYLES={
+    critical:{bg:"#fee2e2",col:"#dc2626",label:"🔴 CRITICAL",border:"#ef4444"},
+    urgent:{bg:"#fff7ed",col:"#b45309",label:"🟠 URGENT",border:"#f97316"},
+    warning:{bg:"#fffbeb",col:"#854d0e",label:"⚠️ WARNING",border:"#fbbf24"},
+    normal:{bg:"#f0fdf4",col:"#166534",label:"✅ OK",border:"#4ade80"}
+  };
+
   const filtered=rows.filter(r=>{
-    const okFilter=filter==="All Tasks" || r.category===filter;
-    const okSearch=!search || (String(r.title)+" "+String(r.tour?.tourCode)+" "+String(r.category)+" "+String(r.notes)).toLowerCase().includes(search);
+    if(!showDone&&r.done)return false;
+    const okFilter=filter==="All Tasks"||r.category===filter;
+    const okSearch=!search||(String(r.title)+" "+String(r.tour?.tourCode)+" "+String(r.category)+" "+String(r.notes)).toLowerCase().includes(search);
     return okFilter&&okSearch;
-  }).sort((a,b)=>(b.sortDate||0)-(a.sortDate||0));
-  const grouped=filtered.reduce((m,r)=>{(m[r.date]=m[r.date]||[]).push(r);return m;},{});
-  const filterButtons=["All Tasks","Payment Collection","Passport","Update"];
+  }).sort((a,b)=>{
+    if(!a.done&&b.done)return -1;
+    if(a.done&&!b.done)return 1;
+    const urgencyOrder={critical:0,urgent:1,warning:2,normal:3};
+    return (urgencyOrder[a.urgency]||3)-(urgencyOrder[b.urgency]||3)||(b.sortDate||0)-(a.sortDate||0);
+  });
+
   function completeRow(r){
     const base=r.task||makeTask(r.tour?.tourCode||"",r.customerId||"",r.title,r.rawCategory||r.category,r.notes||"");
     onUpdateTask({...base,status:r.done?"Pending":"Done",updatedAt:new Date().toISOString()});
   }
+
+  function bulkComplete(){
+    bulkSelected.forEach(key=>{
+      const r=filtered.find(x=>(x.title+x.tour?.tourCode)===key);
+      if(r&&!r.done)completeRow(r);
+    });
+    setBulkSelected([]);
+  }
+
+  function getWhatsAppTemplate(r){
+    const tourName=r.tour?.tourName||"";
+    const tourCode=r.tour?.tourCode||"";
+    const dep=fmtDate(r.tour?.departureDate);
+    if(r.category==="Payment Collection")
+      return `Dear Valued Customer,
+
+This is a friendly reminder regarding your booking for *${tourCode} - ${tourName}* (Departure: ${dep}).
+
+We would like to remind you that your payment is due. Kindly arrange your payment at the earliest convenience.
+
+For assistance, please contact us. Thank you for choosing our services! 🙏`;
+    if(r.category==="Passport")
+      return `Dear Valued Customer,
+
+For your upcoming tour *${tourCode} - ${tourName}* (Departure: ${dep}), please ensure your passport is valid for at least 6 months from the travel date.
+
+Kindly submit a copy of your passport to us as soon as possible to facilitate visa and documentation processing.
+
+Thank you! ✈️`;
+    if(r.category==="Date Change")
+      return `Dear Valued Customer,
+
+Important update regarding your tour *${tourCode} - ${tourName}*:
+
+📅 *Tour Date Change Notice*
+${r.tour?.dateChangeNote||""}
+
+Please acknowledge this message and contact us if you have any questions. We apologise for any inconvenience caused.`;
+    if(r.category==="Cancellation")
+      return `Dear Valued Customer,
+
+Important update regarding tour *${tourCode} - ${tourName}*:
+
+❗ *Tour Cancellation Notice*
+${r.tour?.cancelUpdateNote||""}
+
+Our team will be in touch regarding your refund/transfer options. We sincerely apologise for the inconvenience.`;
+    if(r.category==="Itinerary Update")
+      return `Dear Valued Customer,
+
+We have an update to the itinerary for your tour *${tourCode} - ${tourName}* (Departure: ${dep}):
+
+📋 ${r.tour?.itineraryUpdateNote||""}
+
+Please review the updated itinerary. Contact us if you have any questions. Thank you!`;
+    return `Dear Valued Customer,
+
+This is an update regarding your tour *${tourCode} - ${tourName}* (Departure: ${dep}).
+
+Action required: ${r.actionItem}
+
+Please contact us for more details. Thank you!`;
+  }
+
   return h("div",{className:"grid"},
     h(Card,null,
       h("div",{style:{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}},
         h("div",{style:{flex:1}},
-          h("h2",{style:{fontSize:22,fontWeight:900,marginBottom:4}},"ACTION CENTRE"),
-          h("div",{style:{fontSize:13,color:"#64748b",fontWeight:700}},`Pending Tasks: ${pendingCount}`)
+          h("h2",{style:{fontSize:22,fontWeight:900,marginBottom:4}},"✅ ACTION CENTRE"),
+          h("div",{style:{fontSize:13,color:"#64748b",fontWeight:700}},`Master Task & Reminder Board`)
         ),
-        h("span",{className:"badge",style:{background:pendingCount?"#fee2e2":"#dcfce7",color:pendingCount?"#dc2626":"#166534",fontSize:12}},pendingCount?`${pendingCount} pending`:"All clear")
+        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
+          criticalCount>0&&h("span",{className:"badge",style:{background:"#fee2e2",color:"#dc2626",fontSize:12}},`🔴 ${criticalCount} Critical`),
+          urgentCount>0&&h("span",{className:"badge",style:{background:"#fff7ed",color:"#b45309",fontSize:12}},`🟠 ${urgentCount} Urgent`),
+          paymentCount>0&&h("span",{className:"badge",style:{background:"#fef3c7",color:"#92400e",fontSize:12}},`💰 ${paymentCount} Payments`),
+          h("span",{className:"badge",style:{background:pendingCount?"#fee2e2":"#dcfce7",color:pendingCount?"#dc2626":"#166534",fontSize:12}},pendingCount?`${pendingCount} Pending`:"All Clear ✅")
+        )
+      ),
+      h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,marginTop:14}},
+        h(StatBox,{label:"Total Tasks",value:rows.length}),
+        h(StatBox,{label:"Pending",value:pendingCount,color:pendingCount?{bg:"#fff1f2",col:"#dc2626"}:{bg:"#f0fdf4",col:"#166534"}}),
+        h(StatBox,{label:"Critical",value:criticalCount,color:{bg:"#fee2e2",col:"#dc2626"}}),
+        h(StatBox,{label:"Payments Due",value:paymentCount,color:{bg:"#fef3c7",col:"#92400e"}}),
+        h(StatBox,{label:"Completed",value:rows.filter(r=>r.done).length,color:{bg:"#f0fdf4",col:"#166534"}})
       ),
       h("div",{style:{display:"flex",gap:8,marginTop:14,flexWrap:"wrap",alignItems:"center"}},
-        h("input",{placeholder:"Search Tour Code / Keyword",value:q,onChange:e=>setQ(e.target.value),style:{maxWidth:360}}),
-        filterButtons.map(f=>h("button",{key:f,className:"tab "+(filter===f?"active":""),onClick:()=>setFilter(f)},f))
+        h("input",{placeholder:"🔍 Search tour code / keyword / action...",value:q,onChange:e=>setQ(e.target.value),style:{flex:1,minWidth:200,maxWidth:400}}),
+        h("label",{style:{display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:700,color:"#64748b",cursor:"pointer",padding:"6px 10px",background:"#f8fafc",borderRadius:7,border:"1.5px solid #e2e8f0"}},
+          h("input",{type:"checkbox",checked:showDone,onChange:e=>setShowDone(e.target.checked)}),
+          "Show Completed"
+        ),
+        bulkSelected.length>0&&h(Btn,{variant:"primary",size:"sm",onClick:bulkComplete},`✓ Complete ${bulkSelected.length} Selected`)
+      ),
+      h("div",{style:{display:"flex",gap:6,marginTop:10,flexWrap:"wrap"}},
+        CATS.map(f=>h("button",{key:f,className:"tab "+(filter===f?"active":""),onClick:()=>setFilter(f),style:{fontSize:11}},f))
       )
     ),
+
+    filtered.length===0?h(Card,null,h("div",{className:"empty-state"},"🎉 No pending action items found! Great job keeping up.")):
     h(Card,null,
-      h(Section,{icon:"📅",title:"Tasks Grouped by Date"}),
-      filtered.length===0?h("div",{className:"empty-state"},"No action items found."):
-      h("div",{style:{maxHeight:520,overflow:"auto",paddingRight:4}},Object.entries(grouped).map(([d,arr])=>h("div",{key:d,style:{marginBottom:18}},
-        h("h3",{style:{fontSize:15,fontWeight:900,color:"#1e293b",margin:"0 0 8px"}},d),
-        arr.map((r,i)=>h("label",{key:r.title+i,style:{display:"flex",gap:9,alignItems:"flex-start",padding:"7px 8px",borderBottom:"1px solid #f1f5f9",cursor:"pointer",textDecoration:r.done?"line-through":"none",opacity:r.done?0.55:1}},
-          h("input",{type:"checkbox",checked:!!r.done,onChange:()=>completeRow(r),style:{marginTop:2,width:15,height:15}}),
-          h("span",{style:{fontWeight:800,color:r.done?"#64748b":"#0f172a"}},r.title),
-          r.amount?h("span",{style:{color:"#dc2626",fontWeight:800}},`— ${fmt(r.amount)}`):null,
-          r.done&&h("span",{style:{fontSize:11,color:"#64748b"}},`Completed on: ${r.date}`)
-        ))
-      )))
+      h(Section,{icon:"📋",title:`Tasks — ${filtered.length} shown`,right:
+        filtered.filter(r=>!r.done).length>0&&h(Btn,{size:"sm",variant:"ghost",onClick:()=>{
+          const allKeys=filtered.filter(r=>!r.done).map(r=>r.title+r.tour?.tourCode);
+          setBulkSelected(prev=>prev.length===allKeys.length?[]:allKeys);
+        }},bulkSelected.length?"Deselect All":"Select All Pending")
+      }),
+      h("div",{style:{overflowX:"auto"}},
+        h("table",{className:"table"},
+          h("thead",null,
+            h("tr",null,
+              h("th",null,""),
+              h("th",null,"Urgency"),
+              h("th",null,"Tour Code"),
+              h("th",null,"Category"),
+              h("th",null,"Action Required"),
+              h("th",null,"Amount"),
+              h("th",null,"Departure"),
+              h("th",null,"Notes"),
+              h("th",null,"Reminder"),
+              h("th",null,"Done")
+            )
+          ),
+          h("tbody",null,filtered.map((r,i)=>{
+            const key=r.title+r.tour?.tourCode;
+            const catStyle=CAT_COLORS[r.category]||CAT_COLORS["Update"];
+            const urgStyle=URGENCY_STYLES[r.urgency||"normal"];
+            const selected=bulkSelected.includes(key);
+            return h("tr",{key:r.title+i,style:{
+              textDecoration:r.done?"line-through":"none",
+              opacity:r.done?0.5:1,
+              background:selected?"#eff6ff":r.done?"#f8fafc":urgStyle.bg+"33"
+            }},
+              h("td",null,!r.done&&h("input",{type:"checkbox",checked:selected,onChange:()=>setBulkSelected(p=>p.includes(key)?p.filter(x=>x!==key):[...p,key])})),
+              h("td",null,h("span",{className:"badge",style:{background:urgStyle.bg,color:urgStyle.col,fontSize:10,whiteSpace:"nowrap"}},
+                r.done?"✅ Done":r.days<=0?"Departed":urgStyle.label||(r.days<365?`${r.days}d`:"—")
+              )),
+              h("td",null,h("span",{style:{fontWeight:900,color:"#2563eb",cursor:"pointer"},onClick:()=>{}},r.tour?.tourCode||"—")),
+              h("td",null,h("span",{className:"badge",style:{background:catStyle.bg,color:catStyle.col,fontSize:10}},r.category)),
+              h("td",{style:{fontWeight:700,color:r.done?"#94a3b8":"#0f172a",maxWidth:280}},r.actionItem),
+              h("td",{style:{color:"#dc2626",fontWeight:800,whiteSpace:"nowrap"}},r.amount?fmt(r.amount):"—"),
+              h("td",{style:{whiteSpace:"nowrap",fontSize:11}},fmtDate(r.tour?.departureDate)),
+              h("td",{style:{fontSize:11,color:"#64748b",maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},r.notes||"—"),
+              h("td",null,h(Btn,{size:"sm",variant:"ghost",onClick:()=>setReminderModal(r),title:"Generate reminder message"},"📨")),
+              h("td",null,h("input",{type:"checkbox",checked:!!r.done,onChange:()=>completeRow(r),style:{width:16,height:16,cursor:"pointer"}}))
+            );
+          }))
+        )
+      )
     ),
-    h(Card,null,
-      h(Section,{icon:"📋",title:"Table View"}),
-      h("div",{className:"table-wrap"},h("table",{className:"table"},
-        h("thead",null,h("tr",null,["Status","Date","Tour Code","Category","Action Item"].map(x=>h("th",{key:x},x)))),
-        h("tbody",null,filtered.map((r,i)=>h("tr",{key:r.title+i,style:{textDecoration:r.done?"line-through":"none",opacity:r.done?0.55:1}},
-          h("td",null,h("input",{type:"checkbox",checked:!!r.done,onChange:()=>completeRow(r)})),
-          h("td",null,r.date),
-          h("td",{style:{fontWeight:900,color:"#2563eb"}},r.tour?.tourCode||"—"),
-          h("td",null,r.category),
-          h("td",{style:{fontWeight:700}},r.actionItem)
-        )))
-      ))
+
+    reminderModal&&h("div",{className:"modal-back",onClick:e=>{if(e.target===e.currentTarget)setReminderModal(null)}},
+      h("div",{className:"modal"},
+        h("div",{className:"modal-head"},
+          h("div",{style:{fontWeight:800,fontSize:16}},"📨 Reminder Message Template"),
+          h("button",{className:"btn ghost",onClick:()=>setReminderModal(null),style:{fontSize:24,lineHeight:1,padding:"4px 8px"}},"×")
+        ),
+        h("div",{className:"modal-body"},
+          h("div",{className:"notice info",style:{marginBottom:12}},
+            h("b",null,"Tour: "),reminderModal.tour?.tourCode," — ",reminderModal.tour?.tourName," | ",
+            h("b",null,"Action: "),reminderModal.actionItem
+          ),
+          h("div",{style:{marginBottom:12}},
+            h("label",{style:{fontSize:11,fontWeight:800,color:"#64748b",textTransform:"uppercase",letterSpacing:".05em",display:"block",marginBottom:6}},"WhatsApp / Message Template"),
+            h("textarea",{value:getWhatsAppTemplate(reminderModal),readOnly:true,style:{width:"100%",minHeight:180,fontFamily:"inherit",fontSize:13,padding:12,borderRadius:8,border:"1.5px solid #e2e8f0",background:"#f8fafc",resize:"vertical"}}),
+            h("div",{style:{display:"flex",gap:8,marginTop:8}},
+              h(Btn,{variant:"primary",onClick:()=>{navigator.clipboard.writeText(getWhatsAppTemplate(reminderModal)).then(()=>alert("Copied to clipboard!")).catch(()=>alert("Copy failed — please select and copy manually"))}},"📋 Copy Message"),
+              h(Btn,{onClick:()=>{const enc=encodeURIComponent(getWhatsAppTemplate(reminderModal));window.open("https://wa.me/?text="+enc,"_blank")}},"💬 Open in WhatsApp")
+            )
+          )
+        )
+      )
     )
   );
 }
+
 async function uploadPassportIndexed(file,tourCode,cust,index){
   const folderId=await ensureDriveFolder(tourCode||"UNKNOWN");
   const ext=(file.name.split(".").pop()||"jpg").toLowerCase();
@@ -392,7 +757,133 @@ function PassportUploadSection({c,setC,tour,customers}){
     )
   );
 }
-function App(){const [signed,setSigned]=useState(false),[tours,setTours]=useState([]),[customers,setCustomers]=useState([]),[tasks,setTasks]=useState([]),[vouchers,setVouchers]=useState([]),[goals,setGoals]=useState({annualTravellerGoal:"6000",monthlySignUpGoal:"400",annualSignUpGoal:"4000"}),[announcements,setAnnouncements]=useState([]),[sync,setSync]=useState("idle"),[view,setView]=useState("dashboard"),[sel,setSel]=useState(null),[editTour,setEditTour]=useState(null),[editCust,setEditCust]=useState(null),[saving,setSaving]=useState(false);const load=useCallback(async()=>{setSync("loading");try{await ensureTabs();const [t,c,tk,v,g,a]=await Promise.all([getRows(SHEETS.TOURS,TOUR_COLS),getRows(SHEETS.CUSTOMERS,CUST_COLS),getRows(SHEETS.TASKS,TASK_COLS),getRows(SHEETS.VOUCHERS,VOUCHER_COLS),getRows(SHEETS.GOALS,GOAL_COLS),getRows(SHEETS.ANNOUNCEMENTS,ANN_COLS)]);setTours(t);setCustomers(c);setTasks(tk);setVouchers(v.length?v:DEFAULT_VOUCHERS);if(g.length)setGoals(Object.fromEntries(g.map(x=>[x.key,x.value])));setAnnouncements(a);setSync("saved")}catch(e){console.error(e);setSync("error");alert("Load failed: "+e.message)}},[]);async function saveTour(t){setSaving(true);setSync("saving");try{const old=tours.find(x=>x.id===t.id)||{};const arr=tours.some(x=>x.id===t.id)?tours.map(x=>x.id===t.id?t:x):[...tours,t];await writeRows(SHEETS.TOURS,TOUR_COLS,arr);setTours(arr);let nts=[...tasks];const active=customers.filter(c=>c.tourCode===t.tourCode&&c.status==="Active");const items=[];if(old.id&&flightSignature(old)!==flightSignature(t))active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Flight Change`,"Flight Change")));if(old.id&&(old.departureDate!==t.departureDate||old.arrivalDate!==t.arrivalDate))active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Date Change`,"Date Change")));if(old.id&&old.status!=="Cancelled"&&t.status==="Cancelled")active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Cancellation`,"Cancellation")));nts=addMissingTasks(nts,items);if(nts.length!==tasks.length){await writeRows(SHEETS.TASKS,TASK_COLS,nts);setTasks(nts)}setSel(t);setView("tour");setSync("saved")}catch(e){setSync("error");alert("Save failed: "+e.message)}setSaving(false)}async function saveCust(c){setSaving(true);setSync("saving");try{const old=customers.find(x=>x.id===c.id)||{};const tour=tours.find(t=>t.tourCode===c.tourCode)||ET;let final={...c};if(boolify(final.informedDateChange)&&!final.informedDateChangeDate)final.informedDateChangeDate=new Date().toISOString().slice(0,10);if(boolify(final.informedCancellation)&&!final.informedCancellationDate)final.informedCancellationDate=new Date().toISOString().slice(0,10);const auto=birthdayVoucher(final,tour);let vs=parseVoucher(final.voucherJson).filter(v=>!v.expiry||v.expiry>=new Date().toISOString().slice(0,10));if(auto&&!vs.some(v=>v.type==="Birthday Voucher RM500"&&v.validFrom===auto.validFrom))vs.push({...auto,holderName:fullName(final)});final.voucherJson=JSON.stringify(vs);const arr=customers.some(x=>x.id===final.id)?customers.map(x=>x.id===final.id?final:x):[...customers,final];await writeRows(SHEETS.CUSTOMERS,CUST_COLS,arr);setCustomers(arr);let nt=[...tasks];if(old.status&&old.status!==final.status&&final.status==="Transferred")nt=addMissingTasks(nt,[makeTask(final.tourCode,final.id,`${final.tourCode}_Pax Transferred`,"Transfer",`${fullName(final)} transferred to ${final.transferToTour||"—"}`)]);if(old.status&&old.status!==final.status&&final.status==="Cancelled")nt=addMissingTasks(nt,[makeTask(final.tourCode,final.id,`${final.tourCode}_Pax Cancellation`,"Cancellation",`${fullName(final)} cancelled tour`)]);if(nt.length!==tasks.length){await writeRows(SHEETS.TASKS,TASK_COLS,nt);setTasks(nt)}const p=activePax(arr,final.tourCode),tourObj=tours.find(t=>t.tourCode===final.tourCode);if(tourObj&&p>=18&&tourObj.status==="Pending"){const ut={...tourObj,status:"Confirmed"};const ta=tours.map(t=>t.id===ut.id?ut:t);await writeRows(SHEETS.TOURS,TOUR_COLS,ta);setTours(ta)}setView("tour");setSync("saved")}catch(e){setSync("error");alert("Save failed: "+e.message)}setSaving(false)}async function saveTask(t){const row={...t,status:t.status==="Done"?"Done":t.status||"Pending",updatedAt:new Date().toISOString()};const arr=tasks.some(x=>x.id===row.id)?tasks.map(x=>x.id===row.id?row:x):[...tasks,row];await writeRows(SHEETS.TASKS,TASK_COLS,arr);setTasks(arr)}async function saveVouchers(rows){await writeRows(SHEETS.VOUCHERS,VOUCHER_COLS,rows);setVouchers(rows)}async function saveGoals(g){setGoals(g);await writeRows(SHEETS.GOALS,GOAL_COLS,Object.entries(g).map(([key,value])=>({key,value})))}async function saveAnnouncements(rows){setAnnouncements(rows);await writeRows(SHEETS.ANNOUNCEMENTS,ANN_COLS,rows)}async function createVoucher(v){const arr=[...vouchers,v];await saveVouchers(arr)}if(!signed)return h(SignIn,{onSignIn:async()=>{setSigned(true);await load()}});const current=sel?(tours.find(t=>t.tourCode===sel.tourCode)||sel):null;const pendingCount=tasks.filter(t=>t.status!=="Done").length;return h("div",{className:"layout"},h("aside",{className:"sidebar no-print"},h("div",{className:"sidebar-logo"},h("div",{className:"logo-icon"},"✈️"),h("h1",null,"Tour Ops"),h("p",null,"Management System")),h("div",{className:"sidebar-nav"},h("button",{className:"side-btn",onClick:()=>{setEditTour(null);setView("tourForm")}},h("span",{className:"side-icon"},"➕"),h("span",{className:"side-label"},"New Tour")),h("div",{className:"sidebar-section"},"Navigation"),[["dashboard","📊","Dashboard"],["customerDb","📋","Customer Database"],["vouchers","🎟️","Voucher Sheet"],["paymentReminders","💳","Payment Reminders"],["actionCentre","✅","Action Centre"]].map(([v,ico,lab])=>h("button",{key:v,className:"side-btn "+(view===v?"active":""),onClick:()=>setView(v)},h("span",{className:"side-icon"},ico),h("span",{className:"side-label"},lab),(v==="paymentReminders"||v==="actionCentre")&&pendingCount>0&&h("span",{className:"side-badge",style:{background:"#dc2626",color:"#fff"}},pendingCount))),h("div",{className:"sidebar-section"},"Tours"),tours.map(t=>{const p=activePax(customers,t.tourCode),pc=paxColor(p),cur=current&&current.tourCode===t.tourCode;return h("button",{key:t.id||t.tourCode,className:"side-btn "+(cur?"active":""),onClick:()=>{setSel(t);setView("tour")}},h("div",{style:{flex:1,overflow:"hidden",textAlign:"left"}},h("div",{style:{fontWeight:800,fontSize:12,color:cur?"#93c5fd":"#e2e8f0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},t.tourCode),h("div",{style:{fontSize:10,color:"#64748b",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},t.tourName||"—")),h("span",{className:"badge",style:{background:pc.bg,color:pc.col,fontSize:10}},p))}))),h("div",{className:"main"},h("div",{className:"topbar no-print"},h("div",null,h("div",{className:"topbar-title"},view),current&&h("div",{className:"topbar-sub"},`${current.tourCode} · ${current.tourName}`)),h("div",{style:{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}},h("div",{className:"sync-dot "+sync}),h("span",{style:{fontSize:11,color:"#94a3b8",fontWeight:600}},sync),h(Btn,{size:"sm",onClick:load},"Refresh"),h(Btn,{size:"sm",onClick:()=>{_token=null;_tokenExpiresAt=0;setSigned(false)}},"Sign Out"))),h("div",{className:"content"},view==="dashboard"&&h(Dashboard,{tours,customers,tasks,goals,onSaveGoals:saveGoals,announcements,onSaveAnnouncements:saveAnnouncements,onCreateTask:saveTask,onCreateVoucher:createVoucher,onOpen:t=>{setSel(t);setView("tour")},onEdit:t=>{setEditTour(t);setView("tourForm")},onUpdateTask:saveTask}),view==="customerDb"&&h(CustomerDatabase,{customers,onBack:()=>setView("dashboard"),onEdit:c=>{setEditCust(c);setView("custForm")}}),view==="vouchers"&&h(VoucherLibrary,{vouchers,onSave:saveVouchers,onBack:()=>setView("dashboard")}),view==="paymentReminders"&&h(PaymentReminderSheet,{tours,customers,tasks,onUpdateTask:saveTask,onBack:()=>setView("dashboard")}),view==="actionCentre"&&h(ActionCentre,{tours,customers,tasks,onUpdateTask:saveTask}),view==="tour"&&current&&h(TourDetail,{tour:current,customers,tasks,onBack:()=>setView("dashboard"),onEditTour:()=>{setEditTour(current);setView("tourForm")},onAddCust:()=>{setEditCust({...EC,tourCode:current.tourCode});setView("custForm")},onEditCust:c=>{setEditCust(c);setView("custForm")},onAddTask:saveTask,onUpdateTask:saveTask}),view==="tourForm"&&h(Modal,{title:editTour?"Edit Tour":"New Tour",onClose:()=>setView(current?"tour":"dashboard")},h(TourForm,{initial:editTour||{},customers,onSave:saveTour,onCancel:()=>setView(current?"tour":"dashboard"),saving})),view==="custForm"&&h(Modal,{title:editCust?.id?"Edit Customer":"Add Customer",onClose:()=>setView(current?"tour":"dashboard")},h(CustomerForm,{initial:editCust||{},tours,customers,onSave:saveCust,onCancel:()=>setView(current?"tour":"dashboard"),saving})))))}
+
+function TourDetail({tour,customers,tasks,onBack,onEditTour,onAddCust,onEditCust,onAddTask,onUpdateTask}){
+  const [tab,setTab]=useState("pax");
+  const [showTab,setShowTab]=useState("Active");
+  const [filter,setFilter]=useState("");
+  const pax=activePax(customers,tour.tourCode);
+  const pc=paxColor(pax);
+  const dn=calcDN(tour.departureDate,tour.arrivalDate);
+  const disc=getTourDiscount(tour,pax);
+  const days=Math.ceil((new Date(tour.departureDate)-new Date())/86400000);
+  const activeCusts=customers.filter(c=>isActiveInTour(c,tour.tourCode));
+  const totalCollected=activeCusts.reduce((s,c)=>{const f=calcFare(c,tour,customers);return s+f.paid},0);
+  const totalFare=activeCusts.reduce((s,c)=>{const f=calcFare(c,tour,customers);return s+f.fare},0);
+  const totalBalance=totalFare-totalCollected;
+  const urgency=days<=7?"critical":days<=14?"urgent":days<=30?"warning":"ok";
+  const urgencyColors={critical:{bg:"#fee2e2",col:"#dc2626",label:"CRITICAL"},urgent:{bg:"#fef3c7",col:"#b45309",label:"URGENT"},warning:{bg:"#fff7ed",col:"#ea580c",label:""},ok:{bg:"#f0fdf4",col:"#16a34a",label:""}};
+  const uc=urgencyColors[urgency];
+  return h("div",{className:"grid"},
+    h("div",{style:{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}},
+      h(Btn,{onClick:onBack},"← Back"),
+      h("div",{style:{flex:1}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}},
+          h("h2",{style:{fontSize:22,fontWeight:900,color:"#0f172a"}},tour.tourCode," — ",tour.tourName),
+          h(Badge,{status:tour.status}),
+          days>0&&days<365&&h("span",{className:"badge",style:{background:uc.bg,color:uc.col}},
+            urgency==="critical"||urgency==="urgent"?`🔴 ${days}d to departure`:
+            urgency==="warning"?`⚠️ ${days}d to departure`:`✅ ${days}d to departure`
+          )
+        ),
+        h("div",{style:{fontSize:12,color:"#64748b",marginTop:4,display:"flex",gap:16,flexWrap:"wrap"}},
+          h("span",null,"✈️ ",tour.internationalAirline||tour.airline||"—"),
+          h("span",null,"📅 ",fmtDate(tour.departureDate)," → ",fmtDate(tour.arrivalDate)),
+          tour.tourManager&&h("span",null,"👤 ",tour.tourManager),
+          dn.days&&h("span",null,"🕐 ",dn.days,"D/",dn.nights,"N")
+        )
+      ),
+      h(Btn,{onClick:onEditTour},"✏️ Edit Tour"),
+      h(Btn,{variant:"primary",onClick:onAddCust},"+ Add Customer")
+    ),
+    h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}},
+      h(StatBox,{label:"Active Pax",value:h("span",{style:{color:pc.col}},pax),sub:pax>=28?"FULL":pax>=18?"Confirmed":pax+" / 18 min",color:pc}),
+      h(StatBox,{label:"Tour Price",value:fmt(Number(tour.normalPrice||0)-disc),sub:disc?`RM${disc.toLocaleString()} discount`:""}) ,
+      h(StatBox,{label:"Collected",value:fmt(totalCollected)}),
+      h(StatBox,{label:"Outstanding",value:fmt(totalBalance),color:totalBalance>0?{bg:"#fff1f2",col:"#dc2626"}:{bg:"#f0fdf4",col:"#166534"}}),
+      h(StatBox,{label:"Group Seats",value:tour.groupSeats||"—",sub:`Used: ${groupSeatUsed(customers,tour.tourCode)}`}),
+      h(StatBox,{label:"Flight PNR",value:h("span",{style:{fontSize:13}},tour.flightPNR||"—"),sub:tour.groupPNR?`Group PNR: ${tour.groupPNR}`:""}),
+      h(StatBox,{label:"Meal Restrictions",value:activeCusts.filter(c=>c.mealRestriction&&c.mealRestriction!=="None").length,sub:"Special meal pax"}),
+      h(StatBox,{label:"Total Revenue",value:fmt(totalCollected),sub:totalBalance>0?fmt(totalBalance)+" outstanding":"Fully paid ✅"})
+    ),
+    h(FlightPanel,{tour,customers}),
+    h("div",{className:"tabs"},
+      ["pax","inactive","tasks","seats","notes"].map(t=>h("button",{key:t,className:"tab "+(tab===t?"active":""),onClick:()=>setTab(t)},
+        t==="pax"?"👥 Active Pax":t==="inactive"?"❌ Transferred/Cancelled":t==="tasks"?"📋 Tasks":t==="seats"?"💺 Seat List":"📝 Notes & Emergency"
+      ))
+    ),
+    tab==="pax"&&h("div",{className:"grid"},
+      h("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},
+        h("input",{placeholder:"🔍 Filter customers...",value:filter,onChange:e=>setFilter(e.target.value),style:{maxWidth:300}}),
+        h("span",{style:{fontSize:12,color:"#64748b",fontWeight:700}},`${activeCusts.filter(c=>!filter||(fullName(c)+c.contact+c.groupName).toLowerCase().includes(filter.toLowerCase())).length} shown`)
+      ),
+      h(CustomerTable,{tour,customers,onEdit:onEditCust,show:"Active",filter})
+    ),
+    tab==="inactive"&&h(CustomerTable,{tour,customers,onEdit:onEditCust,show:"Inactive"}),
+    tab==="seats"&&h(Card,null,
+      h(Section,{icon:"💺",title:"Seat Assignment List"}),
+      h("div",{className:"notice info",style:{marginBottom:12}},"Seat numbers are assigned in the customer's Flight tab. Group PNR: ",h("b",null,tour.groupPNR||"—")," | Flight PNR: ",h("b",null,tour.flightPNR||"—")),
+      h("div",{className:"table-wrap"},h("table",{className:"table"},
+        h("thead",null,h("tr",null,["#","Traveller","Seat 1","Seat 2","Seat 3","Seat 4","Dom Seat 1","Dom Seat 2","PNR Note"].map(x=>h("th",{key:x},x)))),
+        h("tbody",null,activeCusts.map((c,i)=>h("tr",{key:c.id},
+          h("td",null,i+1),
+          h("td",{style:{fontWeight:700}},fullName(c)),
+          h("td",{style:{background:c.flight1Seat?"#f0fdf4":undefined,fontWeight:c.flight1Seat?800:400,color:c.flight1Seat?"#166534":"#94a3b8"}},c.flight1Seat||"—"),
+          h("td",{style:{background:c.flight2Seat?"#f0fdf4":undefined,fontWeight:c.flight2Seat?800:400,color:c.flight2Seat?"#166534":"#94a3b8"}},c.flight2Seat||"—"),
+          h("td",{style:{background:c.flight3Seat?"#f0fdf4":undefined,fontWeight:c.flight3Seat?800:400,color:c.flight3Seat?"#166534":"#94a3b8"}},c.flight3Seat||"—"),
+          h("td",{style:{background:c.flight4Seat?"#f0fdf4":undefined,fontWeight:c.flight4Seat?800:400,color:c.flight4Seat?"#166534":"#94a3b8"}},c.flight4Seat||"—"),
+          h("td",{style:{color:c.domesticSeat1?"#166534":"#94a3b8"}},c.domesticSeat1||"—"),
+          h("td",{style:{color:c.domesticSeat2?"#166534":"#94a3b8"}},c.domesticSeat2||"—"),
+          h("td",null,boolify(c.differentPNR)?h("span",{className:"badge",style:{background:"#fef3c7",color:"#92400e",fontSize:10}},c.anotherPNR||"Own PNR"):boolify(c.noIntlFlight)?h("span",{className:"badge",style:{background:"#f3e8ff",color:"#7e22ce",fontSize:10}},"No Intl Flight"):"—")
+        )))
+      ))
+    ),
+    tab==="tasks"&&h(TaskWall,{tour,customers,tasks,onAddTask,onUpdateTask}),
+    tab==="notes"&&h("div",{className:"grid"},
+      h(Card,null,
+        h(Section,{icon:"📝",title:"Tour Notes & Updates"}),
+        tour.dateChangeNote&&h("div",{className:"notice warn",style:{marginBottom:8}},h("b",null,"Date Change Note: "),tour.dateChangeNote),
+        tour.cancelUpdateNote&&h("div",{className:"notice danger",style:{marginBottom:8}},h("b",null,"Cancellation Note: "),tour.cancelUpdateNote),
+        tour.itineraryUpdateNote&&h("div",{className:"notice info",style:{marginBottom:8}},h("b",null,"Itinerary Update: "),tour.itineraryUpdateNote),
+        !tour.dateChangeNote&&!tour.cancelUpdateNote&&!tour.itineraryUpdateNote&&h("div",{className:"empty-state"},"No tour notes. Use Edit Tour to add date change, cancellation or itinerary update notes.")
+      ),
+      h(Card,null,
+        h(Section,{icon:"🆘",title:"Emergency Contacts — Active Pax"}),
+        activeCusts.length===0?h("div",{className:"empty-state"},"No active customers yet."):
+        h("div",{className:"table-wrap"},h("table",{className:"table"},
+          h("thead",null,h("tr",null,["#","Traveller","Contact","Emergency Contact","Emergency Phone"].map(x=>h("th",{key:x},x)))),
+          h("tbody",null,activeCusts.map((c,i)=>h("tr",{key:c.id},
+            h("td",null,i+1),
+            h("td",{style:{fontWeight:700}},fullName(c)),
+            h("td",null,c.contact||"—"),
+            h("td",null,c.emergencyContact||h("span",{style:{color:"#94a3b8"}},"Not set")),
+            h("td",null,c.emergencyPhone||h("span",{style:{color:"#94a3b8"}},"Not set"))
+          )))
+        )),
+        h("div",{style:{marginTop:8}},
+          h(Btn,{size:"sm",onClick:()=>{
+            const rows=[["#","Name","Phone","Emergency Contact","Emergency Phone"],...activeCusts.map((c,i)=>[i+1,fullName(c),c.contact||"",c.emergencyContact||"",c.emergencyPhone||""])];
+            const csv=rows.map(r=>r.map(v=>`"${String(v||"").replace(/"/g,'')}"`).join(",")).join("\n");
+            const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download=tour.tourCode+"_emergency_contacts.csv";a.click();
+          }},"⬇️ Export Emergency Contacts")
+        )
+      ),
+      h(Card,null,
+        h(Section,{icon:"🍽️",title:"Meal Restriction Summary"}),
+        h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:12}},
+          Object.entries(activeCusts.reduce((m,c)=>{const k=c.mealRestriction==="Other"?`Other: ${c.mealOther||"?"}`:c.mealRestriction||"None";m[k]=(m[k]||0)+1;return m},{})).map(([meal,count])=>
+            h("div",{key:meal,style:{background:"#f8fafc",border:"1.5px solid #e2e8f0",borderRadius:8,padding:"8px 12px",textAlign:"center"}},
+              h("div",{style:{fontSize:20,fontWeight:900,color:"#1e293b"}},count),
+              h("div",{style:{fontSize:11,color:"#64748b",fontWeight:700}},meal)
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+function App(){const [signed,setSigned]=useState(false),[tours,setTours]=useState([]),[customers,setCustomers]=useState([]),[tasks,setTasks]=useState([]),[vouchers,setVouchers]=useState([]),[goals,setGoals]=useState({annualTravellerGoal:"6000",monthlySignUpGoal:"400",annualSignUpGoal:"4000"}),[announcements,setAnnouncements]=useState([]),[sync,setSync]=useState("idle"),[view,setView]=useState("dashboard"),[sel,setSel]=useState(null),[editTour,setEditTour]=useState(null),[editCust,setEditCust]=useState(null),[saving,setSaving]=useState(false);const load=useCallback(async()=>{setSync("loading");try{await ensureTabs();const [t,c,tk,v,g,a]=await Promise.all([getRows(SHEETS.TOURS,TOUR_COLS),getRows(SHEETS.CUSTOMERS,CUST_COLS),getRows(SHEETS.TASKS,TASK_COLS),getRows(SHEETS.VOUCHERS,VOUCHER_COLS),getRows(SHEETS.GOALS,GOAL_COLS),getRows(SHEETS.ANNOUNCEMENTS,ANN_COLS)]);setTours(t);setCustomers(c);setTasks(tk);setVouchers(v.length?v:DEFAULT_VOUCHERS);if(g.length)setGoals(Object.fromEntries(g.map(x=>[x.key,x.value])));setAnnouncements(a);setSync("saved")}catch(e){console.error(e);setSync("error");alert("Load failed: "+e.message)}},[]);async function saveTour(t){setSaving(true);setSync("saving");try{const old=tours.find(x=>x.id===t.id)||{};const arr=tours.some(x=>x.id===t.id)?tours.map(x=>x.id===t.id?t:x):[...tours,t];await writeRows(SHEETS.TOURS,TOUR_COLS,arr);setTours(arr);let nts=[...tasks];const active=customers.filter(c=>c.tourCode===t.tourCode&&c.status==="Active");const items=[];if(old.id&&flightSignature(old)!==flightSignature(t))active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Flight Change`,"Flight Change")));if(old.id&&(old.departureDate!==t.departureDate||old.arrivalDate!==t.arrivalDate))active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Date Change`,"Date Change")));if(old.id&&old.status!=="Cancelled"&&t.status==="Cancelled")active.forEach(c=>items.push(makeTask(t.tourCode,c.id,`${t.tourCode}_Notify Customers About Cancellation`,"Cancellation")));nts=addMissingTasks(nts,items);if(nts.length!==tasks.length){await writeRows(SHEETS.TASKS,TASK_COLS,nts);setTasks(nts)}setSel(t);setView("tour");setSync("saved")}catch(e){setSync("error");alert("Save failed: "+e.message)}setSaving(false)}async function saveCust(c){setSaving(true);setSync("saving");try{const old=customers.find(x=>x.id===c.id)||{};const tour=tours.find(t=>t.tourCode===c.tourCode)||ET;let final={...c};if(boolify(final.informedDateChange)&&!final.informedDateChangeDate)final.informedDateChangeDate=new Date().toISOString().slice(0,10);if(boolify(final.informedCancellation)&&!final.informedCancellationDate)final.informedCancellationDate=new Date().toISOString().slice(0,10);const auto=birthdayVoucher(final,tour);let vs=parseVoucher(final.voucherJson).filter(v=>!v.expiry||v.expiry>=new Date().toISOString().slice(0,10));if(auto&&!vs.some(v=>v.type==="Birthday Voucher RM500"&&v.validFrom===auto.validFrom))vs.push({...auto,holderName:fullName(final)});final.voucherJson=JSON.stringify(vs);const arr=customers.some(x=>x.id===final.id)?customers.map(x=>x.id===final.id?final:x):[...customers,final];await writeRows(SHEETS.CUSTOMERS,CUST_COLS,arr);setCustomers(arr);let nt=[...tasks];if(old.status&&old.status!==final.status&&final.status==="Transferred")nt=addMissingTasks(nt,[makeTask(final.tourCode,final.id,`${final.tourCode}_Pax Transferred`,"Transfer",`${fullName(final)} transferred to ${final.transferToTour||"—"}`)]);if(old.status&&old.status!==final.status&&final.status==="Cancelled")nt=addMissingTasks(nt,[makeTask(final.tourCode,final.id,`${final.tourCode}_Pax Cancellation`,"Cancellation",`${fullName(final)} cancelled tour`)]);if(nt.length!==tasks.length){await writeRows(SHEETS.TASKS,TASK_COLS,nt);setTasks(nt)}const p=activePax(arr,final.tourCode),tourObj=tours.find(t=>t.tourCode===final.tourCode);if(tourObj&&p>=18&&tourObj.status==="Pending"){const ut={...tourObj,status:"Confirmed"};const ta=tours.map(t=>t.id===ut.id?ut:t);await writeRows(SHEETS.TOURS,TOUR_COLS,ta);setTours(ta)}setView("tour");setSync("saved")}catch(e){setSync("error");alert("Save failed: "+e.message)}setSaving(false)}async function saveTask(t){const row={...t,status:t.status==="Done"?"Done":t.status||"Pending",updatedAt:new Date().toISOString()};const arr=tasks.some(x=>x.id===row.id)?tasks.map(x=>x.id===row.id?row:x):[...tasks,row];await writeRows(SHEETS.TASKS,TASK_COLS,arr);setTasks(arr)}async function saveVouchers(rows){await writeRows(SHEETS.VOUCHERS,VOUCHER_COLS,rows);setVouchers(rows)}async function saveGoals(g){setGoals(g);await writeRows(SHEETS.GOALS,GOAL_COLS,Object.entries(g).map(([key,value])=>({key,value})))}async function saveAnnouncements(rows){setAnnouncements(rows);await writeRows(SHEETS.ANNOUNCEMENTS,ANN_COLS,rows)}async function createVoucher(v){const arr=[...vouchers,v];await saveVouchers(arr)}if(!signed)return h(SignIn,{onSignIn:async()=>{setSigned(true);await load()}});const current=sel?(tours.find(t=>t.tourCode===sel.tourCode)||sel):null;const pendingCount=tasks.filter(t=>t.status!=="Done").length;return h("div",{className:"layout"},h("aside",{className:"sidebar no-print"},h("div",{className:"sidebar-logo"},h("div",{className:"logo-icon"},"✈️"),h("div",null,h("h1",null,"Tour Ops"),h("p",null,"Management System"))),h("div",{className:"sidebar-nav"},h("button",{className:"side-btn",onClick:()=>{setEditTour(null);setView("tourForm")}},h("span",{className:"side-icon"},"➕"),h("span",{className:"side-label"},"New Tour")),h("div",{className:"sidebar-section"},"Navigation"),[["dashboard","📊","Dashboard"],["customerDb","📋","Customer Database"],["vouchers","🎟️","Voucher Sheet"],["paymentReminders","💳","Payment Reminders"],["actionCentre","✅","Action Centre"]].map(([v,ico,lab])=>h("button",{key:v,className:"side-btn "+(view===v?"active":""),onClick:()=>setView(v)},h("span",{className:"side-icon"},ico),h("span",{className:"side-label"},lab),(v==="paymentReminders"||v==="actionCentre")&&pendingCount>0&&h("span",{className:"side-badge",style:{background:"#dc2626",color:"#fff"}},pendingCount))),h("div",{className:"sidebar-section"},"Tours"),tours.map(t=>{const p=activePax(customers,t.tourCode),pc=paxColor(p),cur=current&&current.tourCode===t.tourCode;return h("button",{key:t.id||t.tourCode,className:"side-btn "+(cur?"active":""),onClick:()=>{setSel(t);setView("tour")}},h("div",{style:{flex:1,overflow:"hidden",textAlign:"left"}},h("div",{style:{fontWeight:800,fontSize:12,color:cur?"#93c5fd":"#e2e8f0",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},t.tourCode),h("div",{style:{fontSize:10,color:"#64748b",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},t.tourName||"—")),h("span",{className:"badge",style:{background:pc.bg,color:pc.col,fontSize:10}},p))}))),h("div",{className:"main"},h("div",{className:"topbar no-print"},h("div",null,h("div",{className:"topbar-title"},view==="dashboard"?"📊 Dashboard":view==="tour"?"🗺️ Tour Detail":view==="customerDb"?"📋 Customer Database":view==="vouchers"?"🎟️ Vouchers":view==="paymentReminders"?"💳 Payment Reminders":view==="actionCentre"?"✅ Action Centre":view),current&&h("div",{className:"topbar-sub"},`${current.tourCode} · ${current.tourName}`)),h("div",{style:{marginLeft:"auto",display:"flex",gap:8,alignItems:"center"}},h("div",{className:"sync-dot "+sync}),h("span",{style:{fontSize:11,color:sync==="error"?"#dc2626":sync==="saved"?"#16a34a":sync==="saving"||sync==="loading"?"#2563eb":"#94a3b8",fontWeight:600}},sync==="loading"?"Loading…":sync==="saving"?"Saving…":sync==="saved"?"Saved ✓":sync==="error"?"Sync Error ⚠️":"Idle"),h(Btn,{size:"sm",onClick:()=>window.print(),title:"Print current view"},"🖨️ Print"),h(Btn,{size:"sm",onClick:load},"🔄 Refresh"),h(Btn,{size:"sm",onClick:()=>{if(window.confirm("Sign out?")){{_token=null;_tokenExpiresAt=0;setSigned(false)}}}},"Sign Out"))),h("div",{className:"content"},view==="dashboard"&&h(Dashboard,{tours,customers,tasks,goals,onSaveGoals:saveGoals,announcements,onSaveAnnouncements:saveAnnouncements,onCreateTask:saveTask,onCreateVoucher:createVoucher,onOpen:t=>{setSel(t);setView("tour")},onEdit:t=>{setEditTour(t);setView("tourForm")},onUpdateTask:saveTask}),view==="customerDb"&&h(CustomerDatabase,{customers,onBack:()=>setView("dashboard"),onEdit:c=>{setEditCust(c);setView("custForm")}}),view==="vouchers"&&h(VoucherLibrary,{vouchers,onSave:saveVouchers,onBack:()=>setView("dashboard")}),view==="paymentReminders"&&h(PaymentReminderSheet,{tours,customers,tasks,onUpdateTask:saveTask,onBack:()=>setView("dashboard")}),view==="actionCentre"&&h(ActionCentre,{tours,customers,tasks,onUpdateTask:saveTask}),view==="tour"&&current&&h(TourDetail,{tour:current,customers,tasks,onBack:()=>setView("dashboard"),onEditTour:()=>{setEditTour(current);setView("tourForm")},onAddCust:()=>{setEditCust({...EC,tourCode:current.tourCode});setView("custForm")},onEditCust:c=>{setEditCust(c);setView("custForm")},onAddTask:saveTask,onUpdateTask:saveTask}),view==="tourForm"&&h(Modal,{title:editTour?"Edit Tour":"New Tour",onClose:()=>setView(current?"tour":"dashboard")},h(TourForm,{initial:editTour||{},customers,onSave:saveTour,onCancel:()=>setView(current?"tour":"dashboard"),saving})),view==="custForm"&&h(Modal,{title:editCust?.id?"Edit Customer":"Add Customer",onClose:()=>setView(current?"tour":"dashboard")},h(CustomerForm,{initial:editCust||{},tours,customers,onSave:saveCust,onCancel:()=>setView(current?"tour":"dashboard"),saving})))))}
 
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));
 </script>
