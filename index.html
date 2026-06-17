@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,7 +6,6 @@
 <title>✈️ Tour Ops Management System</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9}
@@ -19,206 +17,6 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
-
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const GC = {
-  CLIENT_ID: "223748838697-qjjf21evahv6i1vq4fme16ij2l1ghtvq.apps.googleusercontent.com",
-  SHEET_ID:  "1pWxulNTh5iIIlUoqbMLyD6CNZgS9h9u5cKEVDbFbMAQ",
-  SCOPES:    "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file",
-};
-const SHEETS = { TOURS:"Tours", CUSTOMERS:"Customers" };
-
-// ── CONSTANTS ─────────────────────────────────────────────────────────────────
-const DISCOUNT_TIERS = [
-  {min:1,  max:10,       discount:1000, label:"1–10 pax: RM1,000 off"},
-  {min:11, max:20,       discount:700,  label:"11–20 pax: RM700 off"},
-  {min:21, max:28,       discount:200,  label:"21–28 pax: RM200 off"},
-  {min:29, max:Infinity, discount:0,    label:"29+ pax: No discount"},
-];
-const TITLES        = ["Mr","Ms","Mrs","Miss","Master","Dr","Dato","Datin"];
-const ROOM_TYPES    = ["Twin","Double","Single","Triple"];
-const MEAL_OPTS     = ["None","Vegetarian","Halal","Vegan","Kosher","No Pork","Other"];
-const NATIONALITIES = ["Malaysian","Singaporean","Indonesian","Filipino","Thai","Other"];
-const TOUR_STATUSES = ["Draft","Confirmed","Departed","Completed","Cancelled"];
-const VISA_STATUSES = ["Not Required","Pending Application","Applied","Approved","Rejected"];
-const BOOKING_SRC   = ["Walk-in","Referral","Website","Agent","Phone","Repeat"];
-
-const TOUR_COLS = ["id","tourCode","tourName","airline","tourManager","departureDate","arrivalDate",
-  "status","normalPrice","singleSupplement","mealIncluded","mealExcluded","specialDiscount","isSpecialDiscount"];
-const CUST_COLS = ["id","tourCode","title","surname","name","contact","email","address",
-  "roomType","roomPartner","mealRestriction","flightExtension","hotelExtension","otherExtension",
-  "upgradeAmount","groundTourOnly","payment1","payment2","payment3",
-  "dob","passportNo","nationality","passportIssue","passportExpiry","passportDriveUrl",
-  "flightRefCode","flightPrice","flightSeat","domesticFlight",
-  "emergencyContact","emergencyPhone","visaStatus","insurancePolicyNo","insuranceAmount",
-  "bookingSource","specialNeeds","notes","isRegular","status",
-  "cancelReason","cancelRefundAmount","cancelVoucherAmount","cancelCarryForward",
-  "cancelRefundDone","cancelVoucherIssued","transferFromTour","transferToTour"];
-
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-const getDiscount = pax => { const t=DISCOUNT_TIERS.find(t=>pax>=t.min&&pax<=t.max); return t?t.discount:0; };
-const calcDN = (dep,arr) => { if(!dep||!arr) return {days:0,nights:0}; const d=Math.round((new Date(arr)-new Date(dep))/86400000); return {days:d+1,nights:d}; };
-const fmt = n => (n==null||n==="")?"—":"RM "+Number(n).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmtDate = d => d?new Date(d).toLocaleDateString("en-MY",{day:"2-digit",month:"short",year:"numeric"}):"—";
-const ageYrs = dob => dob?Math.floor((Date.now()-new Date(dob))/31557600000):null;
-const boolify = v => v===true||v==="TRUE"||v==="true";
-
-function calcFare(cust,tour,activePax){
-  const disc   = boolify(tour?.isSpecialDiscount) ? Number(tour.specialDiscount||0) : getDiscount(activePax);
-  const normal = Number(tour?.normalPrice||0);
-  const pkg    = normal-disc;
-  const upg    = Number(cust.upgradeAmount||0);
-  const ded    = boolify(cust.groundTourOnly) ? normal : 0;
-  const fare   = pkg+upg-ded;
-  const paid   = [cust.payment1,cust.payment2,cust.payment3].reduce((s,x)=>s+Number(x||0),0);
-  return {disc,normal,pkg,upg,ded,fare,paid,balance:fare-paid};
-}
-const rowToObj=(headers,row)=>Object.fromEntries(headers.map((h,i)=>[h,row[i]??""]));
-const objToRow=(headers,obj)=>headers.map(h=>{const v=obj[h];if(v===true)return"TRUE";if(v===false)return"FALSE";return v??"";});
-
-// ── GOOGLE API ────────────────────────────────────────────────────────────────
-let _token=null;
-
-async function sheetsReq(path,method="GET",body=null){
-  if(!_token)throw new Error("NOT_SIGNED_IN");
-  const opts={method,headers:{Authorization:`Bearer ${_token}`,"Content-Type":"application/json"}};
-  if(body)opts.body=JSON.stringify(body);
-  const r=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${GC.SHEET_ID}${path}`,opts);
-  if(!r.ok){const e=await r.json();throw new Error(e.error?.message||"Sheets API error");}
-  return r.json();
-}
-async function ensureSheetTabs(){
-  const meta=await sheetsReq("");
-  const existing=meta.sheets.map(s=>s.properties.title);
-  const requests=[];
-  for(const name of [SHEETS.TOURS,SHEETS.CUSTOMERS]){
-    if(!existing.includes(name))requests.push({addSheet:{properties:{title:name}}});
-  }
-  if(requests.length)await sheetsReq(":batchUpdate","POST",{requests});
-}
-async function getSheetRows(sheetName,cols){
-  try{
-    const r=await sheetsReq(`/values/${encodeURIComponent(sheetName)}`);
-    const rows=r.values||[];
-    if(rows.length<2)return[];
-    const headers=rows[0].length?rows[0]:cols;
-    return rows.slice(1).filter(r=>r.some(c=>c)).map(r=>rowToObj(headers,r));
-  }catch{return[];}
-}
-async function writeAllRows(sheetName,cols,objects){
-  await sheetsReq(`/values/${encodeURIComponent(sheetName)}:clear`,"POST");
-  const values=[cols,...objects.map(o=>objToRow(cols,o))];
-  await sheetsReq(`/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW`,"PUT",{values});
-}
-
-// ── GOOGLE OAUTH ──────────────────────────────────────────────────────────────
-function loadGSI(){
-  return new Promise((res,rej)=>{
-    if(window.google?.accounts?.oauth2){res();return;}
-    const s=document.createElement("script");
-    s.src="https://accounts.google.com/gsi/client";
-    s.onload=res;s.onerror=rej;
-    document.head.appendChild(s);
-  });
-}
-async function signIn(onToken){
-  await loadGSI();
-  const client=window.google.accounts.oauth2.initTokenClient({
-    client_id:GC.CLIENT_ID,scope:GC.SCOPES,
-    callback:async(resp)=>{if(resp.error)return;_token=resp.access_token;onToken(_token);}
-  });
-  client.requestAccessToken();
-}
-function signOut(onDone){
-  if(_token)window.google?.accounts?.oauth2?.revoke(_token,()=>{});
-  _token=null;onDone();
-}
-
-// ── GOOGLE DRIVE ──────────────────────────────────────────────────────────────
-async function ensureDriveFolder(tourCode){
-  const q=encodeURIComponent(`name='${tourCode}' and mimeType='application/vnd.google-apps.folder' and trashed=false`);
-  const r=await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`,{headers:{Authorization:`Bearer ${_token}`}});
-  const {files}=await r.json();
-  if(files?.length)return files[0].id;
-  const cr=await fetch("https://www.googleapis.com/drive/v3/files",{method:"POST",headers:{Authorization:`Bearer ${_token}`,"Content-Type":"application/json"},body:JSON.stringify({name:tourCode,mimeType:"application/vnd.google-apps.folder"})});
-  return(await cr.json()).id;
-}
-async function uploadPassport(file,tourCode,custName){
-  const folderId=await ensureDriveFolder(tourCode);
-  const ext=file.name.split(".").pop();
-  const meta=JSON.stringify({name:`${custName}_passport.${ext}`,parents:[folderId]});
-  const form=new FormData();
-  form.append("metadata",new Blob([meta],{type:"application/json"}));
-  form.append("file",file);
-  const r=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",{method:"POST",headers:{Authorization:`Bearer ${_token}`},body:form});
-  if(!r.ok)throw new Error("Upload failed");
-  return(await r.json()).webViewLink;
-}
-
-// ── PRINT MANIFEST ────────────────────────────────────────────────────────────
-function printManifest(tour,customers){
-  const ap=customers.filter(c=>c.status==="Active").length;
-  const disc=boolify(tour.isSpecialDiscount)?Number(tour.specialDiscount||0):getDiscount(ap);
-  const priceToday=Number(tour.normalPrice||0)-disc;
-  const dn=calcDN(tour.departureDate,tour.arrivalDate);
-  const rows=customers.map((c,i)=>{
-    const {fare,paid,balance}=calcFare(c,tour,ap);
-    const warn=c.passportExpiry&&tour.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6;
-    return `<tr><td>${i+1}</td><td><b>${c.title} ${c.surname} ${c.name}</b></td><td>${c.contact||"—"}</td><td>${c.passportNo||"—"}</td>
-      <td style="${warn?"color:#dc2626;font-weight:700":""}">${fmtDate(c.passportExpiry)}${warn?" ⚠️":""}</td>
-      <td>${c.roomType}${c.roomPartner?" / "+c.roomPartner:""}</td>
-      <td>${c.mealRestriction!=="None"?c.mealRestriction:"—"}</td>
-      <td>${c.flightRefCode||"—"}</td>
-      <td style="${c.visaStatus==="Approved"?"color:#16a34a":c.visaStatus==="Rejected"?"color:#dc2626":""}">${c.visaStatus}</td>
-      <td align="right"><b>${fmt(fare)}</b></td><td align="right" style="color:#16a34a">${fmt(paid)}</td>
-      <td align="right" style="${balance>0?"color:#dc2626;font-weight:700":"color:#16a34a"}">${fmt(Math.abs(balance))}${balance<0?" CR":""}</td>
-      <td align="center"><b>${c.status}</b></td></tr>`;
-  }).join("");
-  const tF=customers.reduce((s,c)=>s+calcFare(c,tour,ap).fare,0);
-  const tP=customers.reduce((s,c)=>s+calcFare(c,tour,ap).paid,0);
-  const tB=tF-tP;
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Manifest — ${tour.tourCode}</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:11px;padding:20px}
-  h1{font-size:18px;color:#1e3a5f}table{width:100%;border-collapse:collapse}
-  thead tr{background:#1e3a5f;color:#fff}th{padding:6px 7px;text-align:left;font-size:10px}
-  td{padding:5px 7px;border-bottom:1px solid #e5e7eb}tr:nth-child(even){background:#f9fafb}
-  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0;background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:6px}
-  .lbl{font-size:9px;text-transform:uppercase;color:#6b7280;font-weight:700}.val{font-size:12px;font-weight:700}
-  .tot{margin-top:12px;text-align:right;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px 16px;border-radius:6px;display:flex;justify-content:flex-end;gap:24px}
-  @media print{@page{margin:10mm}}</style></head><body>
-  <div style="display:flex;justify-content:space-between;border-bottom:2px solid #1e3a5f;padding-bottom:12px;margin-bottom:12px">
-    <div><div style="font-size:9px;color:#6b7280;text-transform:uppercase;letter-spacing:1px">Tour Manifest</div>
-    <h1>${tour.tourCode} — ${tour.tourName}</h1>
-    <div style="color:#6b7280;margin-top:3px">${tour.airline||""} | Tour Manager: ${tour.tourManager||"—"}</div></div>
-    <div style="text-align:right;font-size:10px;color:#6b7280">Printed: ${new Date().toLocaleString("en-MY")}</div>
-  </div>
-  <div class="grid">
-    <div><div class="lbl">Departure</div><div class="val">${fmtDate(tour.departureDate)}</div></div>
-    <div><div class="lbl">Arrival</div><div class="val">${fmtDate(tour.arrivalDate)}</div></div>
-    <div><div class="lbl">Duration</div><div class="val">${dn.days>0?dn.days+"D / "+dn.nights+"N":"—"}</div></div>
-    <div><div class="lbl">Pax</div><div class="val">${ap}</div></div>
-    <div><div class="lbl">Normal Price</div><div class="val">${fmt(tour.normalPrice)}</div></div>
-    <div><div class="lbl">Price Today</div><div class="val" style="color:#166534">${fmt(priceToday)}</div></div>
-    <div><div class="lbl">Discount</div><div class="val">${fmt(disc)}</div></div>
-    <div><div class="lbl">Single Supp.</div><div class="val">${fmt(tour.singleSupplement)}</div></div>
-    <div><div class="lbl">Meal Incl.</div><div class="val">${tour.mealIncluded||"—"}</div></div>
-    <div><div class="lbl">Meal Excl.</div><div class="val">${tour.mealExcluded||"—"}</div></div>
-  </div>
-  <table><thead><tr><th>#</th><th>Full Name</th><th>Contact</th><th>Passport No.</th><th>Expiry</th>
-  <th>Room / Partner</th><th>Meal Pref.</th><th>Flight Ref</th><th>Visa</th>
-  <th>Tour Fare</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
-  <tbody>${rows}</tbody></table>
-  <div class="tot">
-    <div><div class="lbl">Total Fare</div><div class="val">${fmt(tF)}</div></div>
-    <div><div class="lbl">Total Collected</div><div class="val">${fmt(tP)}</div></div>
-    <div><div class="lbl">Outstanding</div><div class="val" style="color:${tB>0?"#dc2626":"#166534"}">${fmt(Math.abs(tB))}${tB<0?" CR":""}</div></div>
-  </div>
-  <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#9ca3af">
-    <span>Tour Operations Management System</span><span>CONFIDENTIAL — Internal Use Only</span>
-  </div>
-  
 <script>
 const {useState,useEffect,useCallback}=React;
 const h=React.createElement;
@@ -345,18 +143,37 @@ function CustomerForm({initial,tours,customers,onSave,onCancel,saving}){const [c
 // ─────────────────────────────────────────────────────────────────────────────
 function CustomerTable({tour,customers,onEdit,show="Active",filter}){let rows=show==="Active"?customers.filter(c=>isActiveInTour(c,tour.tourCode)):show==="Inactive"?customers.filter(c=>isInactiveOriginal(c,tour.tourCode)):customers.filter(c=>isActiveInTour(c,tour.tourCode)||isInactiveOriginal(c,tour.tourCode));if(filter){const f=filter.toLowerCase();rows=rows.filter(c=>(fullName(c)+c.contact+c.groupName+c.roomGroup+c.status+c.mealRestriction+c.visaStatus+c.roomPartner).toLowerCase().includes(f))}if(!rows.length)return h("div",{className:"empty-state"},"No customers.");return h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["#","Name","Contact","Birthday","Room","Meal","Visa","Passport","Ext.","Fare","Balance","Status","Updates","Pending",""] .map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((c,i)=>{const f=calcFare(c,tour,customers);const gcol=hashColor(c.groupName,.18),gtext=hashColor(c.groupName,1),rcol=hashColor(c.roomGroup||c.roomPartner,.1),bday=birthdayInTour(c.dob,tour.departureDate,tour.arrivalDate),active=isActiveInTour(c,tour.tourCode),pt=pendingTasks(c,tour,customers);return h("tr",{key:c.id},h("td",null,i+1),h("td",{style:{background:gcol||undefined,color:gtext||undefined,borderLeft:gcol?`3px solid ${gtext}`:undefined}},h("b",null,fullName(c)),h("div",{style:{fontSize:10,color:gtext||"#64748b",fontWeight:c.bookingType==="Group"?800:400}},c.bookingType==="Group"?`Group: ${c.groupName||"—"}`:"Individual"),c.status==="Transferred"&&c.transferToTour===tour.tourCode&&h("div",{style:{fontSize:10,color:"#7c3aed",fontWeight:800}},`From ${c.tourCode}`)),h("td",null,c.contact||"—"),h("td",{style:{background:bday?"#fef3c7":undefined,color:bday?"#92400e":undefined,fontWeight:bday?900:400}},fmtDate(c.dob),bday?" 🎂":""),h("td",{style:{background:rcol||undefined}},c.roomType,h("div",{style:{fontSize:10,color:"#64748b"}},c.roomPartner||c.roomGroup||"")),h("td",null,c.mealRestriction==="Other"?`Other: ${c.mealOther}`:c.mealRestriction||"—"),h("td",null,c.visaStatus||"—"),h("td",null,c.passportNo||"—",h("div",{style:{fontSize:10,color:"#94a3b8"}},fmtDate(c.passportExpiry))),h("td",null,c.flightHotelExtension||"—"),h("td",{style:{fontWeight:800}},active?fmt(f.fare):"—"),h("td",{style:{color:f.balance>0?"#dc2626":"#16a34a",fontWeight:900}},active?fmt(Math.abs(f.balance)):"—"),h("td",null,h(Badge,{status:active&&c.status==="Transferred"?"Active":c.status})),h("td",null,h("div",{style:{fontSize:10,color:boolify(c.informedDateChange)?"#16a34a":"#94a3b8"}},boolify(c.informedDateChange)?"✅ Date":"— Date"),h("div",{style:{fontSize:10,color:boolify(c.informedCancellation)?"#16a34a":"#94a3b8"}},boolify(c.informedCancellation)?"✅ Cancel":"— Cancel")),h("td",null,pt.slice(0,2).map(x=>h("div",{key:x.title,className:"pending-item"},x.title))),h("td",null,h(Btn,{size:"sm",onClick:()=>onEdit(c)},"Edit")))}))))}
 function PaymentReminderSheet({tours,customers,tasks,onUpdateTask,onBack}){const rows=[];tours.forEach(t=>customers.filter(c=>isActiveInTour(c,t.tourCode)).forEach(c=>{pendingTasks(c,t,customers).filter(x=>x.category==="Payment").forEach(x=>{const title=`${t.tourCode}_${x.title}`;const done=tasks.some(ts=>ts.tourCode===t.tourCode&&ts.customerId===c.id&&ts.title===title&&ts.status==="Done");rows.push({tour:t,cust:c,title,amount:x.amount,done})})}));return h("div",{className:"grid"},h("div",{style:{display:"flex",gap:8,alignItems:"center"}},h(Btn,{onClick:onBack},"← Back"),h("h2",null,"💳 Payment Reminder Sheet")),h(Card,null,h("div",{className:"table-wrap"},h("table",{className:"table"},h("thead",null,h("tr",null,["Tour Code","Traveller","Which Payment to Collect","Amount to Collect","Checkbox"].map(x=>h("th",{key:x},x)))),h("tbody",null,rows.map((r,i)=>h("tr",{key:i,style:{textDecoration:r.done?"line-through":"none",opacity:r.done?.6:1}},h("td",null,r.tour.tourCode),h("td",null,fullName(r.cust)),h("td",null,r.title),h("td",null,fmt(r.amount)),h("td",null,h("input",{type:"checkbox",checked:r.done,onChange:()=>onUpdateTask(makeTask(r.tour.tourCode,r.cust.id,r.title,"Payment","Payment reminder completed"))}))))))))) }
-
 function TaskWall({tour,customers,tasks,onAddTask,onUpdateTask}){
-  const [title,setTitle]=useState(""),[cat,setCat]=useState("General");
+  const [title,setTitle]=useState("");
+  const [cat,setCat]=useState("General");
   const auto=[];
   customers.filter(c=>isActiveInTour(c,tour.tourCode)||isInactiveOriginal(c,tour.tourCode)).forEach(c=>{
     pendingTasks(c,tour,customers).forEach(x=>{
       const taskTitle=`${tour.tourCode}_${x.title}`;
-      if(!tasks.some(t=>t.tourCode===tour.tourCode&&t.customerId===c.id&&t.title===taskTitle&&t.status==="Done"))auto.push({cust:c,title:taskTitle,category:x.category,amount:x.amount});
+      if(!tasks.some(t=>t.tourCode===tour.tourCode&&t.customerId===c.id&&t.title===taskTitle&&t.status==="Done")){
+        auto.push({cust:c,title:taskTitle,category:x.category,amount:x.amount});
+      }
     });
   });
   const manual=tasks.filter(t=>t.tourCode===tour.tourCode&&t.status!=="Done");
-  function add(){if(!title.trim())return;onAddTask(makeTask(tour.tourCode,"",`${tour.tourCode}_${title.trim()}`,cat));setTitle("")}
+  function add(){
+    if(!title.trim())return;
+    onAddTask(makeTask(tour.tourCode,"",`${tour.tourCode}_${title.trim()}`,cat));
+    setTitle("");
+  }
+  const rows=auto.map((r,i)=>h("tr",{key:"a"+i},
+    h("td",null,r.category),
+    h("td",null,fullName(r.cust)),
+    h("td",null,r.title),
+    h("td",null,r.amount?fmt(r.amount):"—"),
+    h("td",null,h(Btn,{size:"sm",variant:"green",onClick:()=>onUpdateTask(makeTask(tour.tourCode,r.cust.id,r.title,r.category,"Done from action centre"))},"✓ Done"))
+  )).concat(manual.map(r=>h("tr",{key:r.id},
+    h("td",null,r.category),
+    h("td",null,r.notes||"General"),
+    h("td",null,r.title),
+    h("td",null,"—"),
+    h("td",null,h(Btn,{size:"sm",variant:"green",onClick:()=>onUpdateTask({...r,status:"Done"})},"✓ Done"))
+  )));
   return h(Card,null,
     h(Section,{icon:"📋",title:"Action Centre / Notification Wall",right:h("span",{className:"badge",style:{background:auto.length+manual.length?"#fee2e2":"#dcfce7",color:auto.length+manual.length?"#dc2626":"#166534"}},`${auto.length+manual.length} pending`)}),
     h("div",{style:{display:"flex",gap:8,marginBottom:12}},
@@ -364,16 +181,16 @@ function TaskWall({tour,customers,tasks,onAddTask,onUpdateTask}){
       h("select",{value:cat,onChange:e=>setCat(e.target.value),style:{maxWidth:180}},["General","Flight Change","Date Change","Cancellation","Payment","Refund","Itinerary Update"].map(x=>h("option",{key:x},x))),
       h(Btn,{variant:"primary",onClick:add},"+ Add")
     ),
-    h("div",{className:"table-wrap"},h("table",{className:"table"},
-      h("thead",null,h("tr",null,["Type","Who","Task","Amount","Action"].map(x=>h("th",{key:x},x)))),
-      h("tbody",null,
-        auto.map((r,i)=>h("tr",{key:"a"+i},h("td",null,r.category),h("td",null,fullName(r.cust)),h("td",null,r.title),h("td",null,r.amount?fmt(r.amount):"—"),h("td",null,h(Btn,{size:"sm",variant:"green",onClick:()=>onUpdateTask({...makeTask(tour.tourCode,r.cust.id,r.title,r.category,"Done from action centre"),status:"Done"})},"✓ Done")))),
-        manual.map(r=>h("tr",{key:r.id},h("td",null,r.category),h("td",null,r.notes||"General"),h("td",null,r.title),h("td",null,"—"),h("td",null,h(Btn,{size:"sm",variant:"green",onClick:()=>onUpdateTask({...r,status:"Done"})},"✓ Done"))))
+    h("div",{className:"table-wrap"},
+      h("table",{className:"table"},
+        h("thead",null,h("tr",null,["Type","Who","Task","Amount","Action"].map(x=>h("th",{key:x},x)))),
+        h("tbody",null,rows)
       )
-    ))
+    )
   );
 }
 
+function DashboardNotificationWall({tasks,tours,customers,onOpen}){const notifs=[];tasks.filter(t=>t.status!=="Done").forEach(t=>notifs.push({date:dateKey(t.createdAt),tourCode:t.tourCode,title:`${t.tourCode||"GENERAL"}_Update – ${t.title}`,cat:t.category,task:t}));const grouped=groupByDate(notifs);return h(Card,null,h(Section,{icon:"🔔",title:"Notification Centre"}),Object.keys(grouped).length?Object.entries(grouped).map(([d,arr])=>h("div",{key:d,style:{marginBottom:12}},h("h4",null,d),arr.map((n,i)=>h("div",{key:i,style:{fontSize:12,padding:"4px 0"}},n.title)))):h("div",{className:"notice success"},"No notifications."))}
 function ActionCentre({tours,customers,tasks,onUpdateTask}){const rows=[];tours.forEach(t=>customers.filter(c=>isActiveInTour(c,t.tourCode)||isInactiveOriginal(c,t.tourCode)).forEach(c=>pendingTasks(c,t,customers).forEach(x=>{const title=`${t.tourCode}_${x.title}`;const done=tasks.some(ts=>ts.tourCode===t.tourCode&&ts.customerId===c.id&&ts.title===title&&ts.status==="Done");rows.push({date:dateKey(new Date()),title,done,tour:t,cust:c,cat:x.category,amount:x.amount})})));const grouped=groupByDate(rows);return h(Card,null,h(Section,{icon:"✅",title:"Action Centre",right:h("span",{className:"badge",style:{background:"#fee2e2",color:"#dc2626"}},rows.filter(x=>!x.done).length+" pending")}),Object.entries(grouped).map(([d,arr])=>h("div",{key:d,style:{marginBottom:14}},h("h4",null,d),arr.map((r,i)=>h("label",{key:i,style:{display:"flex",gap:8,alignItems:"center",fontSize:12,padding:"4px 0",textDecoration:r.done?"line-through":"none",opacity:r.done?.6:1}},h("input",{type:"checkbox",checked:r.done,onChange:()=>onUpdateTask(makeTask(r.tour.tourCode,r.cust.id,r.title,r.cat,"Done from action centre"))}),r.title,r.amount?` — ${fmt(r.amount)}`:"")))))}
 function GoalTracker({goals,onSave,customers}){const [edit,setEdit]=useState(false);const [g,setG]=useState(goals);useEffect(()=>setG(goals),[goals]);const annualGoal=Number(g.annualTravellerGoal||6000),monthlyGoal=Number(g.monthlySignUpGoal||400),signupGoal=Number(g.annualSignUpGoal||4000);const now=new Date(),yr=now.getFullYear(),mo=now.getMonth();const annual=customers.filter(c=>c.status==="Active").length;const monthly=customers.filter(c=>{const id=String(c.id||"");const d=id.includes("cust_")?new Date(Number(id.split("_")[1])):null;return d&&!isNaN(d)&&d.getFullYear()===yr&&d.getMonth()===mo}).length;function bar(label,val,goal){const pct=goal?Math.min(100,Math.round(val/goal*100)):0;return h("div",null,h("div",{style:{display:"flex",justifyContent:"space-between",fontSize:12,fontWeight:800}},h("span",null,label),h("span",null,`${fmtInt(val)} / ${fmtInt(goal)} Pax · ${pct}% Achieved · ${Math.max(0,goal-val)} Remaining`)),h("div",{className:"progress-bar",style:{marginTop:5}},h("div",{className:"progress-fill",style:{width:pct+"%"}})))}return h(Card,null,h(Section,{icon:"🎯",title:"Goal Tracker",right:h(Btn,{size:"sm",onClick:()=>setEdit(!edit)},edit?"Close":"Set Goals")}),edit&&h(Grid,{n:3},h(Field,{label:"Annual Traveller Goal",type:"number",value:g.annualTravellerGoal,onChange:v=>setG(o=>({...o,annualTravellerGoal:v}))}),h(Field,{label:"Monthly Sign-Up Goal",type:"number",value:g.monthlySignUpGoal,onChange:v=>setG(o=>({...o,monthlySignUpGoal:v}))}),h(Field,{label:"Annual Sign-Up Goal",type:"number",value:g.annualSignUpGoal,onChange:v=>setG(o=>({...o,annualSignUpGoal:v}))}),h("div",{style:{gridColumn:"span 3",display:"flex",justifyContent:"flex-end"}},h(Btn,{variant:"primary",onClick:()=>{onSave(g);setEdit(false)}},"Save Goals"))),h("div",{className:"grid"},bar("Annual Traveller Goal",annual,annualGoal),bar("Monthly Sign-Up Goal",monthly,monthlyGoal),bar("Annual Sign-Up Goal",annual,signupGoal)))}
 function AnnouncementHub({announcements,onSave,onCreateTask,onCreateVoucher}){const [form,setForm]=useState({type:"Campaign"});const u=(k,v)=>setForm(o=>({...o,[k]:v}));function save(){const row={id:"ann_"+Date.now(),...form,createdAt:new Date().toISOString()};onSave([...announcements,row]);if(form.type==="Campaign"&&boolify(form.specialDiscount))onCreateVoucher({id:"voucher_"+Date.now(),voucherName:form.campaignName||form.name||"Campaign Discount",voucherType:"Campaign Discount",amount:"",period:form.promotionPeriod||"Campaign Period",campaignName:form.campaignName||form.name||"",entitledByName:"",expiryDate:"",isActive:"TRUE",usedByName:"",usedByTourCode:"",usedDate:"",terms:form.terms||"",notes:form.promotion||""});if(form.type==="Itinerary Update"&&boolify(form.actionRequired))onCreateTask(makeTask("GENERAL","",`${form.itineraryName||"Itinerary"}_Notify affected tour groups`,"Itinerary Update",form.updates||""));setForm({type:"Campaign"})}return h(Card,null,h(Section,{icon:"📢",title:"Announcement Hub"}),h(Grid,{n:3},h(Field,{label:"Announcement Type",value:form.type,onChange:v=>u("type",v),options:ANN_TYPES}),h(Field,{label:"Name",value:form.name||form.campaignName||form.eventName||form.holidayName||form.employeeName||"",onChange:v=>u("name",v)}),h(Field,{label:"Date",type:"date",value:form.date,onChange:v=>u("date",v)})),form.type==="Campaign"&&h(Grid,{n:2},h(Field,{label:"Program",value:form.program,onChange:v=>u("program",v)}),h(Field,{label:"Promotion",value:form.promotion,onChange:v=>u("promotion",v)}),h(Check,{label:"Special Discount Promotion",checked:form.specialDiscount,onChange:v=>u("specialDiscount",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Discount Tier",value:form.discountTier,onChange:v=>u("discountTier",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Promotion Period",value:form.promotionPeriod,onChange:v=>u("promotionPeriod",v)}),boolify(form.specialDiscount)&&h(Field,{label:"Terms & Conditions",type:"textarea",value:form.terms,onChange:v=>u("terms",v)})),form.type==="Itinerary Update"&&h(Grid,{n:2},h(Field,{label:"Itinerary Name",value:form.itineraryName,onChange:v=>u("itineraryName",v)}),h(Check,{label:"Action Required",checked:form.actionRequired,onChange:v=>u("actionRequired",v)}),h("div",{style:{gridColumn:"span 2"}},h(Field,{label:"What Updates",type:"textarea",value:form.updates,onChange:v=>u("updates",v)}))),form.type==="Company Event"&&h(Grid,{n:3},h(Field,{label:"Event Time",value:form.time,onChange:v=>u("time",v)}),h(Field,{label:"Venue",value:form.venue,onChange:v=>u("venue",v)})),form.type==="Public Holiday"&&h(Field,{label:"Remarks",type:"textarea",value:form.remarks,onChange:v=>u("remarks",v)}),form.type==="Employee Birthday"&&h(Grid,{n:2},h(Field,{label:"Employee Name",value:form.employeeName,onChange:v=>u("employeeName",v)}),h(Field,{label:"Department",value:form.department,onChange:v=>u("department",v)})),h("div",{style:{display:"flex",justifyContent:"flex-end",marginTop:10}},h(Btn,{variant:"primary",onClick:save},"Add Announcement")),h("div",{style:{marginTop:12,maxHeight:180,overflow:"auto"}},announcements.slice(-8).reverse().map(a=>h("div",{key:a.id,className:"notice info",style:{marginBottom:6}},`${a.type}: ${a.name||a.campaignName||a.itineraryName||a.employeeName||"—"} — ${fmtDate(a.date)}`))))}
