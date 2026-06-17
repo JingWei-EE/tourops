@@ -813,7 +813,7 @@ function App(){
       const finalStatus=(!boolify(t.isSpecialDiscount)&&pax>=18&&!["Cancelled","Departed","Completed"].includes(t.status))?"Confirmed":t.status;
       const finalTour={...t,status:finalStatus};
       const idx=tours.findIndex(x=>x.id===finalTour.id);
-      const newT=idx>=0?[..tours.slice(0,idx),finalTour,...tours.slice(idx+1)]:[...tours,finalTour];
+      const newT=idx>=0?[...tours.slice(0,idx),finalTour,...tours.slice(idx+1)]:[...tours,finalTour];
       await writeAllRows(SHEETS.TOURS,TOUR_COLS,newT);
       setT(newT);setSS("saved");setLS(Date.now());
       setET(null);
