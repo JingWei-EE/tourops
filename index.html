@@ -6,6 +6,7 @@
 <title>✈️ Tour Ops Management System</title>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:#f1f5f9}
@@ -19,7 +20,6 @@
 <div id="root"></div>
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
-}
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const GC = {
@@ -265,7 +265,7 @@ function printManifest(tour,customers){
   <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#9ca3af">
     <span>Tour Operations Management System</span><span>CONFIDENTIAL — Internal Use Only</span>
   </div>
-  window.onload=()=>window.print()<\/script></body></html>`;
+  <script>window.onload=()=>window.print()<\/script></body></html>`;
   const w=window.open("","_blank");w.document.write(html);w.document.close();
 }
 
@@ -809,15 +809,27 @@ function App(){
   const saveTour=async(t)=>{
     setSav(true);setSS("saving");
     try{
-      // CHANGE: auto-confirm if 18+ pax and not special case
       const pax=customers.filter(c=>c.tourCode===t.tourCode&&c.status==="Active").length;
-      const finalStatus=(!boolify(t.isSpecialDiscount)&&pax>=18&&t.status!=="Cancelled"&&t.status!=="Departed"&&t.status!=="Completed")?"Confirmed":t.status;
+      const finalStatus=(!boolify(t.isSpecialDiscount)&&pax>=18&&!["Cancelled","Departed","Completed"].includes(t.status))?"Confirmed":t.status;
       const finalTour={...t,status:finalStatus};
-      const idx=tours.findIndex(x=>x.id===t.id);
-      const newT=idx>=0?[...customers.slice(0,idx),c,...customers.slice(idx+1)]:[...customers,c];
+      const idx=tours.findIndex(x=>x.id===finalTour.id);
+      const newT=idx>=0?[...tours.slice(0,idx),finalTour,...tours.slice(idx+1)]:[...tours,finalTour];
+      await writeAllRows(SHEETS.TOURS,TOUR_COLS,newT);
+      setT(newT);setSS("saved");setLS(Date.now());
+      setET(null);
+      setV(selTour?"tourDetail":"dashboard");if(!selTour)setSTr(finalTour);
+    }catch(e){setSS("error");setSE(e.message);}
+    setSav(false);
+  };
+
+  const saveCust=async(c)=>{
+    setSav(true);setSS("saving");
+    try{
+      const idx=customers.findIndex(x=>x.id===c.id);
+      const newC=idx>=0?[...customers.slice(0,idx),c,...customers.slice(idx+1)]:[...customers,c];
       await writeAllRows(SHEETS.CUSTOMERS,CUST_COLS,newC);
       setC(newC);setSS("saved");setLS(Date.now());
-      setSCS(false);setV("tourDetail");
+      setEC(null);setSCS(false);setV("tourDetail");
     }catch(e){setSS("error");setSE(e.message);}
     setSav(false);
   };
@@ -930,7 +942,7 @@ function App(){
 
         {view==="tourDetail"&&currentTour&&<TourDetail tour={currentTour} customers={customers} tours={tours} onBack={()=>{setV("dashboard");setSTr(null);}} onEditTour={()=>{setET(currentTour);setV("tourForm");}} onAdd={()=>{setEC({...EC,tourCode:currentTour.tourCode});setV("customerForm");}} onEditCust={c=>{setEC(c);setV("customerForm");}}/>}
 
-        {view==="tourForm"&&<Modal title={editTour?"Edit Tour":"New Tour"} onClose={()=>setV(selTour?"tourDetail":"dashboard")}><TourForm initial={editTour||{}} onSave={saveTour} onCancel={()=>setV(selTour?"tourDetail":"dashboard")} saving={saving}/></Modal>}
+        {view==="tourForm"&&<Modal title={editTour?"Edit Tour":"New Tour"} onClose={()=>setV(selTour?"tourDetail":"dashboard")}><TourForm initial={editTour||{}} onSave={saveTour} onCancel={()=>setV(selTour?"tourDetail":"dashboard")} saving={saving} paxCount={customers.filter(c=>c.tourCode===(editTour?.tourCode||selTour?.tourCode)&&c.status==="Active").length}/></Modal>}
         {view==="customerForm"&&<Modal title={editCust?.id?"Edit Customer":"Add Customer"} onClose={()=>setV("tourDetail")} wide><CustomerForm initial={editCust||{}} tours={tours} customers={customers} onSave={saveCust} onCancel={()=>setV("tourDetail")} saving={saving}/></Modal>}
         {showCS&&<Modal title="🔍 Customer Search — All Tours" onClose={()=>setSCS(false)} wide><CustomerSearch customers={customers} tours={tours} onEdit={c=>{setEC(c);const t=tours.find(x=>x.tourCode===c.tourCode);setSTr(t||null);setSCS(false);setV("customerForm");}}/></Modal>}
       </div>
@@ -938,9 +950,7 @@ function App(){
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  React.createElement(App)
-);
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
