@@ -265,7 +265,7 @@ function printManifest(tour,customers){
   <div style="margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;font-size:9px;color:#9ca3af">
     <span>Tour Operations Management System</span><span>CONFIDENTIAL — Internal Use Only</span>
   </div>
-  <script>window.onload=()=>window.print()<\/script></body></html>`;
+  window.onload=()=>window.print()<\/script></body></html>`;
   const w=window.open("","_blank");w.document.write(html);w.document.close();
 }
 
