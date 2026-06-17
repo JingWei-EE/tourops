@@ -311,7 +311,7 @@ function Card({children,style}){return <div style={{background:"#fff",borderRadi
 function Sec({icon,title}){return <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,paddingBottom:10,borderBottom:"2px solid #f1f5f9"}}><span style={{fontSize:18}}>{icon}</span><span style={{fontWeight:700,fontSize:14,color:"#1e293b"}}>{title}</span></div>;}
 function Btn({children,onClick,variant="default",small,disabled}){
   const s={default:{background:"#fff",border:"1px solid #d1d5db",color:"#374151"},primary:{background:"#2563eb",border:"none",color:"#fff"},green:{background:"#16a34a",border:"none",color:"#fff"},ghost:{background:"transparent",border:"none",color:"#94a3b8"}};
-  return <button onClick={onClick} disabled={disabled} style={{...s[variant]||s.default,padding:small?"5px 12px":"8px 18px",borderRadius:8,cursor:disabled?"not-allowed":"pointer",fontSize:small?11:13,fontWeight:600,display:"inline-flex",alignItems:"center",gap:5,opacity:disabled?.6:1}}>{children}</button>;
+  return <button onClick={onClick} disabled={disabled} style={{...s[variant]||s.default,padding:small?"5px 12px":"8px 18px",borderRadius:8,cursor:disabled?"not-allowed":"pointer",fontSize:small?11:13,fontWeight:600,display:"inline-flex",alignItems:"center",gap:5,opacity:disabled?0.6:1}}>{children}</button>;
 }
 function G({n,gap=12,children}){return <div style={{display:"grid",gridTemplateColumns:`repeat(${n},1fr)`,gap}}>{children}</div>;}
 function Spinner(){return <span style={{display:"inline-block",width:14,height:14,border:"2px solid rgba(255,255,255,.4)",borderTop:"2px solid #fff",borderRadius:"50%",animation:"spin .7s linear infinite"}}/>;}
@@ -366,7 +366,7 @@ function SignInScreen({onSignIn}){
         <div style={{fontSize:56,marginBottom:16}}>✈️</div>
         <h1 style={{fontSize:26,fontWeight:800,color:"#0f172a",marginBottom:8}}>Tour Ops System</h1>
         <p style={{color:"#64748b",fontSize:14,marginBottom:32,lineHeight:1.7}}>Real-time tour & customer management,<br/>backed by your Google Sheet.</p>
-        <button onClick={go} disabled={busy} style={{width:"100%",padding:"14px 20px",borderRadius:12,border:"none",background:"#2563eb",color:"#fff",fontSize:15,fontWeight:700,cursor:busy?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,opacity:busy?.7:1}}>
+        <button onClick={go} disabled={busy} style={{width:"100%",padding:"14px 20px",borderRadius:12,border:"none",background:"#2563eb",color:"#fff",fontSize:15,fontWeight:700,cursor:busy?"not-allowed":"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:10,opacity:busy?0.7:1}}>
           {busy?<><Spinner/> Connecting…</>:<><span style={{fontSize:18}}>🔑</span> Sign in with Google</>}
         </button>
         {err&&<div style={{marginTop:16,background:"#fef2f2",border:"1px solid #fecaca",borderRadius:10,padding:12,fontSize:12,color:"#dc2626",textAlign:"left"}}>{err}</div>}
@@ -754,7 +754,7 @@ function TourDetail({tour,customers,tours,onAdd,onEditCust,onEditTour,onBack}){
               <tbody>{tc.map((c,i)=>{
                 const {fare,paid,balance}=calcFare(c,tour,ap);
                 const warn=c.passportExpiry&&tour.departureDate&&(new Date(c.passportExpiry)-new Date(tour.departureDate))/2592000000<6;
-                return(<tr key={c.id||i} style={{borderBottom:"1px solid #f1f5f9",opacity:c.status!=="Active"?.6:1}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background=""}>
+                return(<tr key={c.id||i} style={{borderBottom:"1px solid #f1f5f9",opacity:c.status!=="Active"?0.6:1}} onMouseEnter={e=>e.currentTarget.style.background="#f8fafc"} onMouseLeave={e=>e.currentTarget.style.background=""}>
                   <td style={{padding:"8px 10px",color:"#94a3b8"}}>{i+1}</td>
                   <td style={{padding:"8px 10px",fontWeight:600,whiteSpace:"nowrap"}}>{c.title} {c.surname} {c.name}{boolify(c.isRegular)&&<span style={{marginLeft:4,fontSize:9,background:"#fef3c7",color:"#92400e",padding:"1px 5px",borderRadius:99}}>Reg</span>}{c.specialNeeds&&<span style={{marginLeft:4,fontSize:9,background:"#fce7f3",color:"#9d174d",padding:"1px 5px",borderRadius:99}}>♿</span>}</td>
                   <td style={{padding:"8px 10px",color:"#475569"}}>{c.contact||"—"}</td>
@@ -813,7 +813,7 @@ function App(){
       const finalStatus=(!boolify(t.isSpecialDiscount)&&pax>=18&&!["Cancelled","Departed","Completed"].includes(t.status))?"Confirmed":t.status;
       const finalTour={...t,status:finalStatus};
       const idx=tours.findIndex(x=>x.id===finalTour.id);
-      const newT=idx>=0?[...tours.slice(0,idx),finalTour,...tours.slice(idx+1)]:[...tours,finalTour];
+      const newT=idx>=0?[..tours.slice(0,idx),finalTour,...tours.slice(idx+1)]:[...tours,finalTour];
       await writeAllRows(SHEETS.TOURS,TOUR_COLS,newT);
       setT(newT);setSS("saved");setLS(Date.now());
       setET(null);
