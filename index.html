@@ -498,8 +498,8 @@ function VoucherLibrary({vouchers,onSave,onBack}){
         h('td',null,h('textarea',{value:r.rule||'',onChange:e=>u(i,'rule',e.target.value),style:{minHeight:44}})),
         h('td',null,h('select',{value:String(r.isActive||'TRUE'),onChange:e=>u(i,'isActive',e.target.value)},['TRUE','FALSE'].map(x=>h('option',{key:x},x)))),
         h('td',null,h('textarea',{value:r.notes||'',onChange:e=>u(i,'notes',e.target.value),style:{minHeight:44}}))
-      ]);}))
-  );
+      ]); }))
+  ));
   return h('div',{style:{display:'flex',flexDirection:'column',gap:16}},
     h('div',{style:{display:'flex',alignItems:'center',gap:10}},h(Btn,{onClick:onBack},'← Back'),h('h2',{style:{flex:1,fontWeight:800,fontSize:18}},'🎟️ Voucher Sheet'),h(Btn,{variant:'primary',onClick:()=>onSave(rows)},'💾 Save')),
     h(Card,null,h(Section,{icon:'📌',title:'Voucher Ongoing Rules'}),h('div',{className:'notice info',style:{marginBottom:12}},'Rules are global templates. Regular Discount auto-listed 2–20 joins. Birthday Voucher RM500 auto-created for eligible travellers. Group Discount for groups of 10+.'),table(rules,false)),
